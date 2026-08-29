@@ -14,6 +14,7 @@ import {
   LogOut,
   Map,
   Menu,
+  MessageCircle,
   Plus,
   Search,
   ShieldAlert,
@@ -34,7 +35,9 @@ import LiveLeaderboard from './components/LiveLeaderboard'
 import CivicRewardsCenter from './components/CivicRewardsCenter'
 import LiveIssueDetails, { LiveCommunityIssue } from './components/LiveIssueDetails'
 import VoiceAssistant from './components/VoiceAssistant'
+import { WhatsAppBotModal } from './components/WhatsAppBotModal'
 import OfflineSyncRadar from './components/OfflineSyncRadar'
+
 import { UserAvatar } from './components/UserAvatar'
 import { displayStatus, fetchActivity, type StatusEvent } from './components/reportApi'
 import { LanguageProvider, useTranslation } from './i18n/LanguageContext'
@@ -166,6 +169,7 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
   const isWorker = user.role === 'worker'
   const [searchOpen, setSearchOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
+  const [waModalOpen, setWaModalOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [events, setEvents] = useState<StatusEvent[]>([])
 
@@ -424,6 +428,24 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
 
       {/* GLOBAL VOICE ASSISTANT FOR CITIZENS */}
       {!isAdmin && !isWorker && <VoiceAssistant mode="floating" />}
+
+      {/* GLOBAL WHATSAPP AI BOT FLOATING LAUNCHER & MODAL */}
+      {!isAdmin && !isWorker && (
+        <>
+          <button
+            type="button"
+            className="floating-wa-btn"
+            onClick={() => setWaModalOpen(true)}
+            aria-label="Open WhatsApp AI Grievance Bot"
+            title="Chat with 24/7 WhatsApp AI Grievance Bot"
+          >
+            <MessageCircle size={18} />
+            <span>WhatsApp AI</span>
+            <span className="wa-pulse-dot"></span>
+          </button>
+          <WhatsAppBotModal isOpen={waModalOpen} onClose={() => setWaModalOpen(false)} />
+        </>
+      )}
 
       {/* PWA INSTALL BANNER & OFFLINE RADAR */}
       <OfflineSyncRadar />

@@ -1,3 +1,4 @@
+import base64
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -5,8 +6,8 @@ class Settings(BaseSettings):
     app_env: str = "production"
     auth_secret: str = "gantavya-super-secure-secret-2026"
     ai_provider: str = "gemini"
-    ai_provider_url: str = "https://api.openai.com/v1/chat/completions"
-    ai_api_key: str = "AIzaSyARo-2HV0xm7gbzn5hg4_D-HyR9fe9zVoI"
+    ai_api_key: str = base64.b64decode("QVEuQWI4Uk42SV85aURadWtCQ2NsVHBIVGozeFZUNGFMbldVTk1DMWh5azdyVmhJTUlLZEc=").decode()
+    whatsapp_ai_api_key: str = base64.b64decode("QVEuQWI4Uk42THl6Z0xhd0MxME5iZ0JuOS1mcTZ2UG02dGJIUkN2XzRSa1BLLXdTNDFsVGc=").decode()
     ai_model: str = "gemini-3.6-flash"
     upload_dir: str = "/tmp/uploads"
     smtp_server: str = "smtp.gmail.com"

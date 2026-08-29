@@ -12,7 +12,7 @@ os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from api.routes import admin, auth, issues, reports, rewards, workers
+from api.routes import admin, auth, issues, reports, rewards, webhooks, workers
 from config.settings import settings
 from db import Base, engine
 
@@ -33,5 +33,7 @@ app.include_router(workers.router, prefix="/api/workers", tags=["workers"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(rewards.router, prefix="/api/rewards", tags=["rewards"])
+app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
+
 
 Base.metadata.create_all(bind=engine)

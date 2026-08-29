@@ -199,7 +199,7 @@ def _sync_analyze_civic(client: genai.Client | None, pil_img: Image.Image, promp
 
     # 2. If Gemini Client is available, run multimodal inference
     if client:
-        fallback_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+        fallback_models = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-flash-latest"]
         for candidate_model in fallback_models:
             try:
                 response = client.models.generate_content(
@@ -350,7 +350,7 @@ def _sync_validate_resolution(client: genai.Client, pil_img: Image.Image, catego
         f"}}"
     )
 
-    fallback_models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.6-flash"]
+    fallback_models = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-flash-latest"]
     last_err = None
 
     for candidate_model in fallback_models:
