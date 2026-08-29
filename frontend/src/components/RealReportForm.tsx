@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   ArrowLeft,
@@ -6,10 +6,12 @@ import {
   CheckCircle2,
   ChevronRight,
   FileImage,
+  Image as ImageIcon,
   LoaderCircle,
   MapPin,
   ShieldAlert,
   Sparkles,
+  Upload,
   Video,
   X,
   XCircle,
@@ -57,6 +59,12 @@ export default function RealReportForm() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoPreview, setVideoPreview] = useState('')
   const [location, setLocation] = useState<Location | null>(null)
+  
+  const photoGalleryInputRef = useRef<HTMLInputElement>(null)
+  const photoCameraInputRef = useRef<HTMLInputElement>(null)
+  const videoGalleryInputRef = useRef<HTMLInputElement>(null)
+  const videoCameraInputRef = useRef<HTMLInputElement>(null)
+
   const [state, setState] = useState<'idle' | 'locating' | 'submitting' | 'success'>('idle')
   const [error, setError] = useState('')
 
@@ -435,30 +443,86 @@ export default function RealReportForm() {
         </div>
 
         {/* STEP 1: Mandatory Photo Proof */}
-        <label className="upload-field-label">
+        <div className="upload-field-label">
           <div className="upload-label-header">
             <span>{t('report_photo_label', 'Evidence Photo')}</span>
             <span className="required-tag">* Required</span>
           </div>
+          
+          {/* Hidden inputs: One for Gallery, one for Camera */}
           <input
             type="file"
+            ref={photoGalleryInputRef}
             className="hidden-file-input"
-            accept="image/jpeg,image/png,image/webp"
-            capture="environment"
+            accept="image/jpeg,image/png,image/webp,image/*"
+            style={{ display: 'none' }}
             onChange={(event) => chooseFile(event.target.files?.[0])}
           />
+          <input
+            type="file"
+            ref={photoCameraInputRef}
+            className="hidden-file-input"
+            accept="image/jpeg,image/png,image/webp,image/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={(event) => chooseFile(event.target.files?.[0])}
+          />
+
           <div className={`upload-box ${scanState === 'fake' ? 'upload-box-fake' : scanState === 'valid' ? 'upload-box-valid' : ''}`}>
             {preview ? (
-              <img className="preview-image" src={preview} alt="Upload preview" />
+              <div className="preview-image-container">
+                <img className="preview-image" src={preview} alt="Upload preview" />
+                <div className="preview-image-actions">
+                  <button
+                    type="button"
+                    className="preview-action-btn gallery-btn"
+                    onClick={() => photoGalleryInputRef.current?.click()}
+                  >
+                    <ImageIcon size={14} /> Gallery
+                  </button>
+                  <button
+                    type="button"
+                    className="preview-action-btn camera-btn"
+                    onClick={() => photoCameraInputRef.current?.click()}
+                  >
+                    <Camera size={14} /> Retake
+                  </button>
+                  <button
+                    type="button"
+                    className="preview-action-btn remove-btn"
+                    onClick={() => { setFile(null); setPreview(''); setScanState('idle'); }}
+                  >
+                    <X size={14} /> Remove
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="upload-box-content-inner">
-                <Camera size={32} className="upload-teal-icon" />
-                <strong>{t('report_photo_btn', 'Take Photo / Choose Image')}</strong>
-                <small>{t('report_photo_hint', 'Take photo or choose from device. AI verifies authenticity.')}</small>
+                <div className="upload-choice-buttons">
+                  <button
+                    type="button"
+                    className="upload-choice-btn gallery-choice-btn"
+                    onClick={() => photoGalleryInputRef.current?.click()}
+                  >
+                    <ImageIcon size={24} className="choice-icon" />
+                    <span className="choice-title">Choose from Gallery</span>
+                    <span className="choice-sub">Upload saved photo / file</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="upload-choice-btn camera-choice-btn"
+                    onClick={() => photoCameraInputRef.current?.click()}
+                  >
+                    <Camera size={24} className="choice-icon" />
+                    <span className="choice-title">Take Live Photo</span>
+                    <span className="choice-sub">Open camera on mobile</span>
+                  </button>
+                </div>
+                <small className="upload-security-hint">{t('report_photo_hint', 'AI inspects civic infrastructure & verifies photo authenticity.')}</small>
               </div>
             )}
           </div>
-        </label>
+        </div>
 
         {/* AI SCAN STATUS NOTICES */}
         {scanState === 'scanning' && (
@@ -499,18 +563,30 @@ export default function RealReportForm() {
         )}
 
         {/* STEP 2: Optional Short Video / Clip */}
-        <label className="upload-field-label">
+        <div className="upload-field-label">
           <div className="upload-label-header">
             <span>{t('report_video_label', 'Short Video / Clip')}</span>
             <span className="optional-tag">{t('report_video_opt', '(Optional, Max 30MB)')}</span>
           </div>
+          
           <input
             type="file"
+            ref={videoGalleryInputRef}
             className="hidden-file-input"
-            accept="video/mp4,video/webm,video/quicktime,video/mov"
-            capture="environment"
+            accept="video/mp4,video/webm,video/quicktime,video/mov,video/*"
+            style={{ display: 'none' }}
             onChange={(event) => chooseVideo(event.target.files?.[0])}
           />
+          <input
+            type="file"
+            ref={videoCameraInputRef}
+            className="hidden-file-input"
+            accept="video/mp4,video/webm,video/quicktime,video/mov,video/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={(event) => chooseVideo(event.target.files?.[0])}
+          />
+
           <div className="upload-box upload-box-video">
             {videoPreview ? (
               <div className="video-preview-wrapper">
@@ -521,13 +597,30 @@ export default function RealReportForm() {
               </div>
             ) : (
               <div className="upload-box-content-inner">
-                <Video size={28} className="upload-teal-icon" />
-                <strong>{t('report_video_btn', 'Attach Short Video Clip (15–30s)')}</strong>
-                <small>{t('report_video_hint', 'Add a 15–30s video showing traffic hazard, sound, or defect depth.')}</small>
+                <div className="upload-choice-buttons">
+                  <button
+                    type="button"
+                    className="upload-choice-btn video-gallery-btn"
+                    onClick={() => videoGalleryInputRef.current?.click()}
+                  >
+                    <Upload size={20} className="choice-icon" />
+                    <span className="choice-title">Gallery Video</span>
+                    <span className="choice-sub">Choose saved video</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="upload-choice-btn video-camera-btn"
+                    onClick={() => videoCameraInputRef.current?.click()}
+                  >
+                    <Video size={20} className="choice-icon" />
+                    <span className="choice-title">Record Video</span>
+                    <span className="choice-sub">15–30s live camera</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
-        </label>
+        </div>
 
         {/* STEP 3: Issue Category */}
         <div>

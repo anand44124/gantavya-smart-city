@@ -8651,6 +8651,152 @@ select:focus, input:focus, textarea:focus {
   }
 }
 
+/* Luxury Upload Choice Buttons (Gallery vs Camera) */
+.upload-choice-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.upload-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  border-radius: 18px;
+  border: 1.5px dashed rgba(13, 148, 136, 0.35);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.upload-choice-btn:hover {
+  transform: translateY(-2px);
+  border-color: #0d9488;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 24px -4px rgba(13, 148, 136, 0.15);
+}
+
+.upload-choice-btn:active {
+  transform: scale(0.98);
+}
+
+.upload-choice-btn .choice-icon {
+  color: #0d9488;
+  margin-bottom: 8px;
+  transition: transform 0.2s ease;
+}
+
+.upload-choice-btn:hover .choice-icon {
+  transform: scale(1.1);
+}
+
+.upload-choice-btn.camera-choice-btn .choice-icon {
+  color: #0284c7;
+}
+
+.upload-choice-btn .choice-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.upload-choice-btn .choice-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.upload-security-hint {
+  display: block;
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+/* Image Preview Container with Re-select Buttons */
+.preview-image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.preview-image-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.preview-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preview-action-btn.gallery-btn {
+  color: #0d9488;
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+.preview-action-btn.gallery-btn:hover {
+  background: rgba(13, 148, 136, 0.1);
+}
+
+.preview-action-btn.camera-btn {
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+.preview-action-btn.camera-btn:hover {
+  background: rgba(2, 132, 199, 0.1);
+}
+
+.preview-action-btn.remove-btn {
+  color: #e11d48;
+  border-color: rgba(225, 29, 72, 0.3);
+}
+
+.preview-action-btn.remove-btn:hover {
+  background: rgba(225, 29, 72, 0.1);
+}
+
+@media (max-width: 640px) {
+  .upload-choice-buttons {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .upload-choice-btn {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 14px 18px;
+    gap: 14px;
+    text-align: left;
+  }
+  .upload-choice-btn .choice-icon {
+    margin-bottom: 0;
+  }
+}
+
+
 
 
 
