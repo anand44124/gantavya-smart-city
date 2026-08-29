@@ -35,6 +35,7 @@ import CivicRewardsCenter from './components/CivicRewardsCenter'
 import LiveIssueDetails, { LiveCommunityIssue } from './components/LiveIssueDetails'
 import VoiceAssistant from './components/VoiceAssistant'
 import OfflineSyncRadar from './components/OfflineSyncRadar'
+import AppInstallPrompt from './components/AppInstallPrompt'
 
 import { UserAvatar } from './components/UserAvatar'
 import { displayStatus, fetchActivity, type StatusEvent } from './components/reportApi'
@@ -426,7 +427,10 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
       {/* GLOBAL VOICE ASSISTANT FOR CITIZENS */}
       {!isAdmin && !isWorker && <VoiceAssistant mode="floating" />}
 
-      {/* PWA INSTALL BANNER & OFFLINE RADAR */}
+      {/* 1-TAP UNIVERSAL PWA APP INSTALL PROMPT (ANDROID & IOS) */}
+      <AppInstallPrompt />
+
+      {/* OFFLINE RADAR & SYNC */}
       <OfflineSyncRadar />
 
       {/* MOBILE APP-STYLE BOTTOM NAVIGATION FOR ALL ROLES */}
