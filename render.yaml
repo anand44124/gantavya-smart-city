@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: gantavya-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SMTP_SERVER
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: gantavya2406@gmail.com
+      - key: SMTP_PASSWORD
+        value: cjlfaokjmynwwaxb
+      - key: SMTP_FROM_NAME
+        value: Gantavya (गंतव्य) Smart City Portal
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_MODEL
+        value: gemini-3.6-flash
+      - key: AI_API_KEY
+        value: AIzaSyARo-2HV0xm7gbzn5hg4_D-HyR9fe9zVoI
+      - key: DATABASE_URL
+        value: sqlite:///./civicpulse.db
