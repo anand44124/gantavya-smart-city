@@ -8791,10 +8791,85 @@ select:focus, input:focus, textarea:focus {
     gap: 14px;
     text-align: left;
   }
-  .upload-choice-btn .choice-icon {
-    margin-bottom: 0;
-  }
+/* AI Status Card & Tags Styling */
+.ai-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  margin: 12px 0;
+  font-size: 13px;
+  backdrop-filter: blur(16px);
+  animation: slideDown 0.25s ease-out;
 }
+
+.ai-status-card.scanning {
+  background: rgba(13, 148, 136, 0.08);
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  color: #0f766e;
+  flex-direction: row;
+  align-items: center;
+}
+
+.ai-status-card.fake {
+  background: rgba(225, 29, 72, 0.08);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  color: #9f1239;
+}
+
+.ai-status-card.valid {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #065f46;
+}
+
+.ai-status-card .valid-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #047857;
+}
+
+.ai-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ai-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.ai-tag.department {
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
+  border: 1px solid rgba(13, 148, 136, 0.25);
+}
+
+.ai-tag.severity {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.ai-tag.hazard {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  text-transform: capitalize;
+}
+
 
 
 
