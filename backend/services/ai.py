@@ -242,34 +242,36 @@ def _sync_analyze_civic(client: genai.Client | None, pil_img: Image.Image, promp
                 print(f"[Gemini Vision Model {candidate_model} Notice] {exc}")
                 continue
 
-    # 3. Intelligent On-Device Vision Classification
+    # 3. Standard Photo Attachment Mode (When Cloud Vision LLM is not connected)
     cat = category_hint or "road_infrastructure"
     dept = DEPARTMENTS.get(cat, "Roads Department")
     subtypes_map = {
-        "road_infrastructure": ("Road Defect / Pothole", "Pothole or cracked asphalt detected on road surface."),
-        "sanitation": ("Garbage / Waste Overflow", "Accumulated municipal solid waste or overflowing bin."),
-        "street_electrical": ("Electrical / Streetlight Hazard", "Faulty streetlight, damaged pole, or exposed line."),
-        "water_drainage": ("Water Leak / Drainage Overflow", "Water leakage or waterlogged street section."),
-        "public_safety": ("Public Safety Defect", "Open drain, missing utility cover, or safety hazard."),
-        "other": ("Civic Obstruction / Defect", "Public infrastructure anomaly reported."),
+        "road_infrastructure": ("Road Defect / Pothole", "Reported road surface defect."),
+        "sanitation": ("Garbage / Waste Issue", "Reported municipal sanitation issue."),
+        "street_electrical": ("Electrical / Streetlight Issue", "Reported streetlight or electrical concern."),
+        "water_drainage": ("Water / Drainage Issue", "Reported water pipeline or drainage issue."),
+        "public_safety": ("Public Safety Concern", "Reported public safety hazard."),
+        "other": ("Civic Issue Report", "Citizen reported municipal concern."),
     }
-    title, desc = subtypes_map.get(cat, ("Reported Municipal Issue", "Verified civic infrastructure defect on public roadway."))
+    title, desc = subtypes_map.get(cat, ("Civic Issue Report", "Geotagged citizen report."))
     
     return {
         "is_civic_issue": True,
         "is_pothole": cat == "road_infrastructure",
+        "ai_verified": False,
         "decision": "accept",
         "category": cat,
         "subtype": SUBTYPES.get(cat, "civic_issue"),
         "department": dept,
-        "confidence": 0.94,
-        "severity": 7,
-        "hazards": ["potential public hazard", "traffic disruption"],
+        "confidence": 0.50,
+        "severity": 5,
+        "hazards": ["pending field inspection"],
         "suggested_title": title,
         "suggested_description": desc,
-        "reason": "Authentic on-site photograph verified by Computer Vision analysis.",
-        "message": "Report validated successfully.",
+        "reason": "Authentic on-site photograph attached. Awaiting municipal field verification.",
+        "message": "Photo attached successfully.",
     }
+
 
 
 async def analyze_civic_image(content: bytes, mime_type: str, category_hint: str | None = None) -> dict[str, object]:

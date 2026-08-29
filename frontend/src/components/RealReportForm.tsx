@@ -547,10 +547,14 @@ export default function RealReportForm() {
         )}
 
         {scanState === 'valid' && scanResult && (
-          <div className="ai-status-card valid">
+          <div className={`ai-status-card ${scanResult.ai_verified === false ? 'standard-valid' : 'valid'}`}>
             <div className="valid-header">
               <Sparkles size={18} />
-              <strong>✅ AI Verified Authentic Civic Issue ({Math.round(scanResult.confidence * 100)}% Match)</strong>
+              <strong>
+                {scanResult.ai_verified === false
+                  ? '📷 Geotagged Photo Attached (Standard Mode)'
+                  : `✅ AI Verified Authentic Civic Issue (${Math.round(scanResult.confidence * 100)}% Match)`}
+              </strong>
             </div>
             <div className="ai-tags">
               <span className="ai-tag department">{scanResult.department}</span>
