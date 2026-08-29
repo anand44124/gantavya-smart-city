@@ -1,5 +1,6 @@
 :root {
-  color-scheme: light !important;
+  color-scheme: only light !important;
+  forced-color-adjust: none !important;
   --ink: #0f172a;
   --ink-secondary: #334155;
   --muted: #64748b;
@@ -22,9 +23,12 @@
   --glass-blur: blur(28px) saturate(190%);
 }
 
-html, body {
-  color-scheme: light !important;
+html, body, #root, .app-shell {
+  color-scheme: only light !important;
+  forced-color-adjust: none !important;
   background-color: #f8fafc !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
 }
 
 #root {
