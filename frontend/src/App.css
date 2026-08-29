@@ -41,6 +41,20 @@ html, body, #root, .app-shell {
   color: #0f172a !important;
 }
 
+/* Strict Android / OS Dark Mode Lock: Keep Light Mode Intact */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: only light !important;
+    forced-color-adjust: none !important;
+  }
+  html, body, #root, .app-shell, .page, .main-content, .card, .glass-card, .citizen-page {
+    color-scheme: only light !important;
+    forced-color-adjust: none !important;
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+}
+
 #root {
   min-height: 100svh;
 }
