@@ -8791,6 +8791,8 @@ select:focus, input:focus, textarea:focus {
     gap: 14px;
     text-align: left;
   }
+}
+
 /* AI Status Card & Tags Styling */
 .ai-status-card {
   display: flex;
