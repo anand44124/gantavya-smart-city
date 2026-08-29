@@ -27,6 +27,7 @@ type Location = { latitude: number; longitude: number; accuracy?: number; addres
 
 type ScanResult = {
   is_civic_issue: boolean
+  ai_verified?: boolean
   decision: string
   reason?: string
   category: string
