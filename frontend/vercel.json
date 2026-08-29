@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://van-driver-areas-wear.trycloudflare.com/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://van-driver-areas-wear.trycloudflare.com/uploads/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
