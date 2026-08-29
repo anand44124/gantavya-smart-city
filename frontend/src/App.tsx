@@ -14,7 +14,6 @@ import {
   LogOut,
   Map,
   Menu,
-  MessageCircle,
   Plus,
   Search,
   ShieldAlert,
@@ -426,22 +425,6 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
 
       {/* GLOBAL VOICE ASSISTANT FOR CITIZENS */}
       {!isAdmin && !isWorker && <VoiceAssistant mode="floating" />}
-
-      {/* DIRECT REAL WHATSAPP LAUNCHER (OPENS OFFICIAL WHATSAPP APP) */}
-      {!isAdmin && !isWorker && (
-        <a
-          href="https://wa.me/14155238886?text=Hi%20Gantavya%2C%20I%20want%20to%20report%20a%20civic%20issue"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="floating-wa-btn"
-          aria-label="Chat with Real WhatsApp Bot"
-          title="Open Real WhatsApp Grievance Bot"
-        >
-          <MessageCircle size={18} />
-          <span>WhatsApp Bot</span>
-          <span className="wa-pulse-dot"></span>
-        </a>
-      )}
 
       {/* PWA INSTALL BANNER & OFFLINE RADAR */}
       <OfflineSyncRadar />
