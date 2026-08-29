@@ -23,6 +23,16 @@
   --glass-blur: blur(28px) saturate(190%);
 }
 
+*, *::before, *::after {
+  forced-color-adjust: none !important;
+}
+
+@media (forced-colors: active) {
+  *, *::before, *::after {
+    forced-color-adjust: none !important;
+  }
+}
+
 html, body, #root, .app-shell {
   color-scheme: only light !important;
   forced-color-adjust: none !important;
