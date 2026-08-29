@@ -3110,10 +3110,18 @@ select:focus, input:focus, textarea:focus {
 /* Voice Assistant FAB & Dialog */
 .voice-floating-container {
   position: fixed;
-  bottom: 84px;
+  bottom: 24px;
   right: 20px;
   z-index: 999;
 }
+
+@media (max-width: 900px) {
+  .voice-floating-container {
+    bottom: 84px;
+    right: 18px;
+  }
+}
+
 
 .voice-fab {
   width: 54px;
@@ -9255,24 +9263,24 @@ select:focus, input:focus, textarea:focus {
   opacity: 0.6;
 }
 
-/* Floating WhatsApp Launch Capsule */
+/* Floating WhatsApp Launch Capsule (Cleanly placed beside Voice Assistant) */
 .floating-wa-btn {
   position: fixed;
-  bottom: 84px;
-  right: 18px;
+  bottom: 24px;
+  right: 86px;
   background: #25d366;
   color: white;
   border: none;
   border-radius: 28px;
-  padding: 8px 14px 8px 10px;
+  padding: 9px 15px 9px 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   box-shadow: 0 8px 25px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0,0,0,0.1);
   cursor: pointer;
-  z-index: 999;
+  z-index: 998;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   backdrop-filter: blur(8px);
 }
@@ -9290,13 +9298,15 @@ select:focus, input:focus, textarea:focus {
   animation: orbFloat 2s infinite;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .floating-wa-btn {
-    bottom: 80px;
-    right: 12px;
+    bottom: 86px;
+    right: 84px;
     padding: 8px 12px;
+    font-size: 12px;
   }
 }
+
 
 
 

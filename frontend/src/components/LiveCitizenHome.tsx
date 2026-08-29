@@ -218,7 +218,7 @@ export default function LiveCitizenHome() {
               <FileText size={20} />
             </div>
             <div>
-              <span>{t('stat_reported')}</span>
+              <span>{t('stat_reported', 'Total Reported')}</span>
               <strong>{reports.length}</strong>
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function LiveCitizenHome() {
               <Activity size={20} />
             </div>
             <div>
-              <span>{t('stat_in_progress')}</span>
+              <span>{t('stat_in_progress', 'In Progress')}</span>
               <strong>{activeReports}</strong>
             </div>
           </div>
@@ -238,7 +238,7 @@ export default function LiveCitizenHome() {
               <CircleCheckBig size={20} />
             </div>
             <div>
-              <span>{t('stat_resolved')}</span>
+              <span>{t('stat_resolved', 'Resolved')}</span>
               <strong>{resolvedReports}</strong>
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function LiveCitizenHome() {
               <Trophy size={20} />
             </div>
             <div>
-              <span>{t('stat_my_points')}</span>
+              <span>{t('stat_my_points', 'My Points')}</span>
               <strong>{rewards?.points?.toLocaleString() ?? 0}</strong>
             </div>
           </div>
