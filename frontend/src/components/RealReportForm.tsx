@@ -226,53 +226,19 @@ Return valid JSON with: is_civic_issue (boolean), decision ("accept"|"reject"), 
     }
   }
 
-  const compressImage = async (fileToCompress: File): Promise<File> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const img = new window.Image()
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const MAX_DIM = 1200
-          let { width, height } = img
-          if (width > MAX_DIM || height > MAX_DIM) {
-            if (width > height) {
-              height = Math.round((height * MAX_DIM) / width)
-              width = MAX_DIM
-            } else {
-              width = Math.round((width * MAX_DIM) / height)
-              height = MAX_DIM
-            }
-          }
-          canvas.width = width
-          canvas.height = height
-          const ctx = canvas.getContext('2d')
-          ctx?.drawImage(img, 0, 0, width, height)
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                resolve(new File([blob], fileToCompress.name.replace(/\.[^/.]+$/, '') + '.jpg', { type: 'image/jpeg' }))
-              } else {
-                resolve(fileToCompress)
-              }
-            },
-            'image/jpeg',
-            0.85
-          )
-        }
-        img.src = e.target?.result as string
-      }
-      reader.readAsDataURL(fileToCompress)
-    })
-  }
 
-  const chooseFile = async (candidate?: File) => {
+
+  const chooseFile = (candidate?: File) => {
     if (!candidate) return
     setError('')
+    setFile(candidate)
+    setPreview(URL.createObjectURL(candidate))
 
-    // 1. Try to extract high precision EXIF GPS directly from the camera photo
-    try {
-      const exifGps = await extractExifGps(candidate)
+    // 1. Run AI scanning immediately in parallel!
+    void scanImageWithAI(candidate)
+
+    // 2. Extract EXIF GPS in background
+    void extractExifGps(candidate).then(async (exifGps) => {
       if (exifGps) {
         const addr = await reverseGeocode(exifGps.latitude, exifGps.longitude)
         setLocation({
@@ -283,20 +249,7 @@ Return valid JSON with: is_civic_issue (boolean), decision ("accept"|"reject"), 
           address: addr,
         })
       }
-    } catch (e) {
-      console.warn('EXIF GPS error:', e)
-    }
-
-    try {
-      const optimized = await compressImage(candidate)
-      setFile(optimized)
-      setPreview(URL.createObjectURL(optimized))
-      void scanImageWithAI(optimized)
-    } catch {
-      setFile(candidate)
-      setPreview(URL.createObjectURL(candidate))
-      void scanImageWithAI(candidate)
-    }
+    }).catch((e) => console.warn('EXIF GPS error:', e))
   }
 
   const chooseVideo = (candidate?: File) => {
