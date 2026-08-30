@@ -69,6 +69,8 @@ if settings.database_url.startswith("sqlite"):
             connection.exec_driver_sql("ALTER TABLE reports ADD COLUMN issue_id INTEGER")
         if "video_path" not in columns:
             connection.exec_driver_sql("ALTER TABLE reports ADD COLUMN video_path VARCHAR(500)")
+        if "evidence_base64" not in columns:
+            connection.exec_driver_sql("ALTER TABLE reports ADD COLUMN evidence_base64 TEXT")
 
         issue_columns = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(issues_runtime)")}
         if "sla_due_at" not in issue_columns:
