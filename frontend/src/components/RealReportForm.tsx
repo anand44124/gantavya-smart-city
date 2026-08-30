@@ -162,7 +162,7 @@ Return valid JSON with: is_civic_issue (boolean), decision ("accept"|"reject"), 
               { text: prompt },
               {
                 inline_data: {
-                  mime_type: candidate.type || 'image/jpeg',
+                  mime_type: 'image/jpeg',
                   data: base64Data,
                 },
               },
