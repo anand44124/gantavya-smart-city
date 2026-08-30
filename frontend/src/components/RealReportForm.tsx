@@ -435,8 +435,8 @@ OUTPUT STRICT JSON ONLY:
     return (
       <div className="page report-success-state">
         <CheckCircle2 size={54} className="success-icon" />
-        <h1>{t('report_success_title')}</h1>
-        <p>{t('report_success_desc')}</p>
+        <h1>{t('report_success_title', 'Report Submitted Successfully!')}</h1>
+        <p>{t('report_success_desc', 'Your civic issue report has been registered with municipal authorities and is now in the live queue.')}</p>
         <div className="reward-congrats-card">
           <Sparkles size={20} className="gold" />
           <div>
