@@ -22,7 +22,7 @@ import VoiceAssistant from './VoiceAssistant'
 import InteractiveLocationPicker from './InteractiveLocationPicker'
 import { extractExifGps } from '../utils/exifGps'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
+const API_URL = import.meta.env.VITE_API_URL || 'https://gantavya-smart-city.onrender.com'
 type Location = { latitude: number; longitude: number; accuracy?: number; address?: string; source?: 'exif' | 'gps' | 'manual' }
 
 type ScanResult = {
