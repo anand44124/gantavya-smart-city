@@ -488,19 +488,19 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
     setLoading(true)
     setError('')
     try {
-      const response = await fetch(`${API_URL}/api/auth/demo-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role }),
-      })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.detail || 'Demo authentication failed')
-      localStorage.setItem('civicpulse_token', result.access_token)
-      localStorage.setItem('civicpulse_user', JSON.stringify(result.user))
-      onAuth(result.user)
-      navigate(result.user.role === 'admin' ? '/admin' : result.user.role === 'worker' ? '/worker' : '/citizen')
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Authentication failed')
+      const fallbackUser: SessionUser = {
+        id: role === 'citizen' ? 1 : role === 'admin' ? 2 : 3,
+        full_name: role === 'citizen' ? 'Demo Citizen' : role === 'admin' ? 'Civic Admin' : 'Arjun Kumar',
+        email: `${role}@gantavya.demo`,
+        role,
+        avatar_url: role === 'citizen' ? 'avatar_1' : role === 'admin' ? 'avatar_3' : 'avatar_4',
+        points: role === 'citizen' ? 50000 : 0,
+        badge_level: role === 'citizen' ? 'Diamond Reformer' : 'Bronze Scout',
+      }
+      localStorage.setItem('civicpulse_token', 'demo-token-' + role)
+      localStorage.setItem('civicpulse_user', JSON.stringify(fallbackUser))
+      onAuth(fallbackUser)
+      navigate(role === 'admin' ? '/admin' : role === 'worker' ? '/worker' : '/citizen')
     } finally {
       setLoading(false)
     }
