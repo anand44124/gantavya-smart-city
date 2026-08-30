@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     app_env: str = "production"
     auth_secret: str = "gantavya-super-secure-secret-2026"
     ai_provider: str = "gemini"
-    ai_api_key: str = base64.b64decode("QVEuQWI4Uk42SV85aURadWtCQ2NsVHBIVGozeFZUNGFMbldVTk1DMWh5azdyVmhJTUlLZEc=").decode()
+    ai_api_key: str = base64.b64decode("QVEuQWI4Uk42TGQ0SXpIRzhvcHVNSDZkZVl0M1EwaTlPcFFwNVk1SVJmMTFyZV94TDVLUGc=").decode()
     whatsapp_ai_api_key: str = base64.b64decode("QVEuQWI4Uk42THl6Z0xhd0MxME5iZ0JuOS1mcTZ2UG02dGJIUkN2XzRSa1BLLXdTNDFsVGc=").decode()
     ai_model: str = "gemini-3.6-flash"
     upload_dir: str = "/tmp/uploads"
