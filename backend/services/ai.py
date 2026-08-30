@@ -254,3 +254,5 @@ def _sync_validate_resolution_gemini(pil_img: Image.Image, category: str) -> dic
 async def validate_pothole_image(content: bytes, mime_type: str, category: str = "road_infrastructure") -> dict[str, object]:
     pil_img = Image.open(io.BytesIO(content))
     return await asyncio.to_thread(_sync_validate_resolution_gemini, pil_img, category)
+
+validate_resolution_proof = validate_pothole_image

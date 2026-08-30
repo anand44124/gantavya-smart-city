@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 # Ensure database path is resolved properly in serverless environments
-db_path = Path(__file__).resolve().parent / "civicpulse.db"
+db_path = Path("/tmp/civicpulse.db")
 os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
 
 from fastapi import FastAPI, Request, Response

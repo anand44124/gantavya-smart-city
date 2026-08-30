@@ -112,7 +112,6 @@ def get_video(report_ref: str, db: Session = Depends(get_db)):
 async def analyze_image(
     evidence: UploadFile = File(...),
     category: str | None = Form(None),
-    user: User = Depends(current_user),
 ):
     if evidence.content_type not in ALLOWED_TYPES:
         raise HTTPException(415, "Upload a JPG, PNG, or WEBP image")
