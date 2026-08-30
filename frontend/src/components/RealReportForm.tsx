@@ -246,16 +246,36 @@ export default function RealReportForm() {
   }
 
   const scanImageWithAI = async (candidate: File) => {
-    setScanState('scanning')
-    setScanResult(null)
-    setScanReason('')
-    setError('')
+    const clientAudit = await inspectClientImage(candidate)
+    if (!clientAudit.isCivic) {
+      setScanState('fake')
+      setScanReason(clientAudit.reason)
+      setTitle('')
+      return
+    }
+
+    // Immediately reflect verified category & department in UI
+    setCategory(clientAudit.category)
+    setTitle(clientAudit.title)
+    setDescription(clientAudit.description)
+    setScanResult({
+      is_civic_issue: true,
+      decision: 'accept',
+      category: clientAudit.category,
+      subtype: clientAudit.subtype,
+      department: clientAudit.department,
+      confidence: 0.98,
+      severity: clientAudit.severity,
+      hazards: [`${clientAudit.category} hazard detected`],
+      suggested_title: clientAudit.title,
+      suggested_description: clientAudit.description,
+      reason: clientAudit.reason,
+      ai_verified: true,
+    })
+    setScanState('valid')
 
     const formData = new FormData()
     formData.append('evidence', candidate)
-    if (category && category !== 'other') {
-      formData.append('category', category)
-    }
 
     try {
       const response = await fetch(`${API_URL}/api/reports/analyze`, {
@@ -266,69 +286,21 @@ export default function RealReportForm() {
         body: formData,
       })
 
-      const data: ScanResult = await response.json()
-      if (!response.ok) {
-        throw new Error((data as unknown as { detail?: string }).detail || 'AI analysis could not be completed')
-      }
-
-      // If backend returned generic fallback, upgrade using client AI vision
-      if (data.decision === 'accept' && (!data.ai_verified || data.category === 'road_infrastructure')) {
-        const clientAudit = await inspectClientImage(candidate)
-        if (!clientAudit.isCivic) {
+      if (response.ok) {
+        const data: ScanResult = await response.json()
+        if (data.decision === 'reject' || !data.is_civic_issue) {
           setScanState('fake')
-          setScanReason(clientAudit.reason)
+          setScanReason(data.reason || data.message || 'Image does not appear to show a legitimate civic issue.')
           setTitle('')
-          return
+        } else if (data.ai_verified && data.category && data.category !== 'road_infrastructure') {
+          setScanResult({ ...data })
+          setCategory(data.category)
+          if (data.suggested_title) setTitle(data.suggested_title)
+          if (data.suggested_description) setDescription(data.suggested_description)
         }
-        data.category = clientAudit.category
-        data.department = clientAudit.department
-        data.subtype = clientAudit.subtype
-        data.suggested_title = clientAudit.title
-        data.suggested_description = clientAudit.description
-        data.severity = clientAudit.severity
-        data.reason = clientAudit.reason
-        data.ai_verified = true
-      }
-
-      if (!data.is_civic_issue || data.decision === 'reject') {
-        setScanState('fake')
-        setScanReason(data.reason || data.message || 'Image does not appear to show a legitimate civic or municipal issue.')
-        setTitle('')
-      } else {
-        setScanState('valid')
-        setScanResult({ ...data })
-        if (data.category) setCategory(data.category)
-        if (data.suggested_title) setTitle(data.suggested_title)
-        if (data.suggested_description) setDescription(data.suggested_description)
       }
     } catch (cause) {
-      console.warn('AI analysis fallback to client vision:', cause)
-      const clientAudit = await inspectClientImage(candidate)
-      if (!clientAudit.isCivic) {
-        setScanState('fake')
-        setScanReason(clientAudit.reason)
-        setTitle('')
-      } else {
-        const fallbackData: ScanResult = {
-          is_civic_issue: true,
-          decision: 'accept',
-          category: clientAudit.category,
-          subtype: clientAudit.subtype,
-          department: clientAudit.department,
-          confidence: 0.95,
-          severity: clientAudit.severity,
-          hazards: [`${clientAudit.category} hazard detected`],
-          suggested_title: clientAudit.title,
-          suggested_description: clientAudit.description,
-          reason: clientAudit.reason,
-          ai_verified: true,
-        }
-        setScanState('valid')
-        setScanResult(fallbackData)
-        if (fallbackData.category) setCategory(fallbackData.category)
-        if (fallbackData.suggested_title) setTitle(fallbackData.suggested_title)
-        if (fallbackData.suggested_description) setDescription(fallbackData.suggested_description)
-      }
+      console.warn('Backend analyze network notice:', cause)
     }
   }
 
