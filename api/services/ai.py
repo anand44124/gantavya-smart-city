@@ -39,11 +39,16 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
     if pil_img.mode != "RGB":
         pil_img = pil_img.convert("RGB")
     buf = io.BytesIO()
-    pil_img.save(buf, format="JPEG", quality=85)
+    # Keep payloads small enough for a serverless request. A phone photo does
+    # not need its original 12-48MP resolution for civic issue classification.
+    pil_img.thumbnail((1600, 1600))
+    pil_img.save(buf, format="JPEG", quality=80, optimize=True)
     b64_image = base64.b64encode(buf.getvalue()).decode("utf-8")
 
     api_key = (settings.ai_api_key or "").strip()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
+    if not api_key:
+        return _vision_unavailable("AI Vision is not configured. Please try again shortly.")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.ai_model}:generateContent"
 
     prompt = (
         "You are an expert municipal infrastructure AI vision inspector for a smart city reporting platform.\n"
@@ -96,79 +101,79 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
         }
     }
 
-    for attempt in range(3):
-        try:
-            resp = requests.post(url, json=payload, timeout=15)
-            if resp.status_code == 200:
-                candidates = resp.json().get("candidates", [])
-                if candidates:
-                    raw_text = candidates[0]["content"]["parts"][0]["text"]
-                    parsed = extract_json(raw_text)
-                    is_civic = bool(parsed.get("is_civic_issue", False))
-                    dec_raw = str(parsed.get("decision", "accept")).lower()
-                    is_rejected = "reject" in dec_raw or not is_civic
-                    decision = "reject" if is_rejected else "accept"
+    try:
+        resp = requests.post(
+            url,
+            json=payload,
+            headers={"x-goog-api-key": api_key},
+            timeout=(3, 10),
+        )
+        if resp.status_code == 200:
+            candidates = resp.json().get("candidates", [])
+            if candidates:
+                raw_text = candidates[0]["content"]["parts"][0]["text"]
+                parsed = extract_json(raw_text)
+                is_civic = bool(parsed.get("is_civic_issue", False))
+                dec_raw = str(parsed.get("decision", "accept")).lower()
+                is_rejected = "reject" in dec_raw or not is_civic
+                decision = "reject" if is_rejected else "accept"
 
-                    raw_cat = str(parsed.get("category", "")).lower()
-                    if "garbage" in raw_cat or "sanitation" in raw_cat or "waste" in raw_cat:
-                        cat = "sanitation"
-                    elif "road" in raw_cat or "pothole" in raw_cat or "asphalt" in raw_cat:
-                        cat = "road_infrastructure"
-                    elif "water" in raw_cat or "drain" in raw_cat or "flood" in raw_cat:
-                        cat = "water_drainage"
-                    elif "electric" in raw_cat or "light" in raw_cat or "wire" in raw_cat:
-                        cat = "street_electrical"
-                    elif "safety" in raw_cat or "manhole" in raw_cat:
-                        cat = "public_safety"
-                    else:
-                        cat = "other" if is_rejected else "sanitation"
+                raw_cat = str(parsed.get("category", "")).lower()
+                if "garbage" in raw_cat or "sanitation" in raw_cat or "waste" in raw_cat:
+                    cat = "sanitation"
+                elif "road" in raw_cat or "pothole" in raw_cat or "asphalt" in raw_cat:
+                    cat = "road_infrastructure"
+                elif "water" in raw_cat or "drain" in raw_cat or "flood" in raw_cat:
+                    cat = "water_drainage"
+                elif "electric" in raw_cat or "light" in raw_cat or "wire" in raw_cat:
+                    cat = "street_electrical"
+                elif "safety" in raw_cat or "manhole" in raw_cat:
+                    cat = "public_safety"
+                else:
+                    cat = "other" if is_rejected else "sanitation"
 
-                    dept = DEPARTMENTS.get(cat, "Sanitation Department" if cat == "sanitation" else "Roads Department")
-                    subtype = str(parsed.get("subtype", SUBTYPES.get(cat, "civic_issue")))
-                    severity = int(parsed.get("severity", 8 if is_civic else 0))
-                    title = str(parsed.get("suggested_title", "Civic Issue Report"))
-                    desc = str(parsed.get("suggested_description", "Reported municipal infrastructure defect."))
-                    reason = str(parsed.get("reason", "Verified by Google Gemini 3.6 Multimodal Vision AI."))
+                dept = DEPARTMENTS.get(cat, "Sanitation Department" if cat == "sanitation" else "Roads Department")
+                subtype = str(parsed.get("subtype", SUBTYPES.get(cat, "civic_issue")))
+                severity = int(parsed.get("severity", 8 if is_civic else 0))
+                title = str(parsed.get("suggested_title", "Civic Issue Report"))
+                desc = str(parsed.get("suggested_description", "Reported municipal infrastructure defect."))
+                reason = str(parsed.get("reason", "Verified by Gemini Vision AI."))
 
-                    return {
-                        "is_civic_issue": not is_rejected,
-                        "is_pothole": cat == "road_infrastructure" and "pothole" in subtype.lower(),
-                        "decision": decision,
-                        "category": cat,
-                        "subtype": subtype,
-                        "department": dept,
-                        "confidence": float(parsed.get("confidence", 0.98)),
-                        "severity": severity,
-                        "hazards": parsed.get("hazards") or [f"{cat} hazard identified"],
-                        "suggested_title": title,
-                        "suggested_description": desc,
-                        "reason": reason,
-                        "message": reason if is_rejected else f"Verified as {title}.",
-                    }
-            elif resp.status_code == 429 and attempt < 2:
-                import time
-                time.sleep(1.5)
-                continue
-        except Exception as e:
-            print(f"[Gemini 3.6 Error attempt {attempt+1}]", e)
-            if attempt < 2:
-                import time
-                time.sleep(1.0)
-                continue
+                return {
+                    "is_civic_issue": not is_rejected,
+                    "is_pothole": cat == "road_infrastructure" and "pothole" in subtype.lower(),
+                    "decision": decision,
+                    "category": cat,
+                    "subtype": subtype,
+                    "department": dept,
+                    "confidence": float(parsed.get("confidence", 0.98)),
+                    "severity": severity,
+                    "hazards": parsed.get("hazards") or [f"{cat} hazard identified"],
+                    "suggested_title": title,
+                    "suggested_description": desc,
+                    "reason": reason,
+                    "message": reason if is_rejected else f"Verified as {title}.",
+                }
+            print(f"[Gemini Vision] status={resp.status_code} body={resp.text[:300]}")
+    except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as exc:
+        print(f"[Gemini Vision] request failed: {type(exc).__name__}: {exc}")
 
+    return _vision_unavailable("AI Vision is temporarily unavailable. Please retry in a moment.")
+
+def _vision_unavailable(reason: str) -> dict[str, object]:
     return {
         "is_civic_issue": False,
         "is_pothole": False,
         "decision": "reject",
         "category": "other",
-        "subtype": "ai_busy",
+        "subtype": "ai_unavailable",
         "department": "Municipal Services",
         "confidence": 0.0,
         "severity": 0,
         "hazards": [],
         "suggested_title": "",
         "suggested_description": "",
-        "reason": "AI Vision server is busy. Please try again.",
+        "reason": reason,
         "message": "AI Vision analysis could not be completed.",
     }
 
