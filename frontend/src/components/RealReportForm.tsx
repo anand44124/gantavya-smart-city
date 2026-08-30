@@ -109,91 +109,25 @@ export default function RealReportForm() {
     setError('')
 
     try {
-      // 1. Fast Canvas Resize & Base64 Conversion (under 100KB for lightning inference)
-      const base64Data = await new Promise<string>((resolve) => {
-        const img = new window.Image()
-        img.onload = () => {
-          const maxDim = 800
-          let w = img.width
-          let h = img.height
-          if (w > maxDim || h > maxDim) {
-            if (w > h) {
-              h = Math.round((h * maxDim) / w)
-              w = maxDim
-            } else {
-              w = Math.round((w * maxDim) / h)
-              h = maxDim
-            }
-          }
-          const canvas = document.createElement('canvas')
-          canvas.width = w
-          canvas.height = h
-          const ctx = canvas.getContext('2d')
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, w, h)
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-            resolve(dataUrl.split(',')[1])
-          } else {
-            resolve('')
-          }
-        }
-        img.src = URL.createObjectURL(candidate)
-      })
+      // 1. Primary: Call Render Backend AI Vision Engine
+      const formData = new FormData()
+      formData.append('evidence', candidate, candidate.name || 'evidence.jpg')
 
-      // 2. Call Gemini 3.6 Flash Multi-modal Vision API directly
-      const geminiKey = atob('QVEuQWI4Uk42SUhaaXpWZGNDZWh1UC13cHJRYTFRRk5sRGZXX09BN2VUaTFrRUFzUEluOXc=')
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiKey}`
-
-      const prompt = `You are an expert municipal infrastructure AI vision inspector for a smart city platform.
-Carefully inspect the image:
-1. REJECT (is_civic_issue=false, decision="reject") if the image is a vehicle/car/selfie/meme with NO visible public infrastructure damage or garbage.
-2. ACCEPT (is_civic_issue=true, decision="accept") if the image shows real public infrastructure issues such as garbage dump piles, road potholes, water leaks, or broken streetlights, even if taken from a street or car window.
-   - For garbage/solid waste: category="sanitation", department="Sanitation Department", severity=8.
-   - For potholes/damaged road: category="road_infrastructure", department="Roads Department", severity=7.
-   - For water leaks/floods: category="water_drainage", department="Water Department", severity=8.
-   - For electrical/streetlights: category="street_electrical", department="Electrical Department", severity=6.
-
-Return valid JSON with: is_civic_issue (boolean), decision ("accept"|"reject"), category (string), department (string), severity (integer 1-10), suggested_title (string), suggested_description (string), reason (string).`
-
-      const payload = {
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              {
-                inline_data: {
-                  mime_type: 'image/jpeg',
-                  data: base64Data,
-                },
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          response_mime_type: 'application/json',
-          temperature: 0.0,
-        },
-      }
-
-      const response = await fetch(endpoint, {
+      const res = await fetch(`${API_URL}/api/reports/analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: { Authorization: `Bearer ${localStorage.getItem('civicpulse_token') || ''}` },
+        body: formData,
       })
 
-      if (!response.ok) {
-        throw new Error(`Gemini API returned status ${response.status}`)
-      }
+      if (res.ok) {
+        const data = await res.json()
+        if (!data.is_civic_issue || data.decision === 'reject') {
+          setScanState('fake')
+          setScanReason(data.reason || data.message || 'The uploaded photo shows a vehicle, selfie, or non-civic scene.')
+          setTitle('')
+          return
+        }
 
-      const resJson = await response.json()
-      const rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text
-      const data = JSON.parse(rawText)
-
-      if (!data.is_civic_issue || data.decision === 'reject') {
-        setScanState('fake')
-        setScanReason(data.reason || 'The uploaded photo shows a vehicle, selfie, or non-civic scene without public infrastructure damage.')
-        setTitle('')
-      } else {
         const validCategory = data.category || 'sanitation'
         const validDepartment = data.department || (validCategory === 'sanitation' ? 'Sanitation Department' : 'Roads Department')
         const validTitle = data.suggested_title || 'Civic Issue Report'
@@ -205,24 +139,136 @@ Return valid JSON with: is_civic_issue (boolean), decision ("accept"|"reject"), 
           is_civic_issue: true,
           decision: 'accept',
           category: validCategory,
-          subtype: validCategory === 'sanitation' ? 'garbage_overflow' : 'pothole',
+          subtype: data.subtype || (validCategory === 'sanitation' ? 'garbage_overflow' : 'pothole'),
           department: validDepartment,
-          confidence: 0.98,
+          confidence: data.confidence || 0.98,
           severity: validSeverity,
-          hazards: [`${validCategory} defect identified`],
+          hazards: data.hazards || [`${validCategory} defect identified`],
           suggested_title: validTitle,
           suggested_description: validDescription,
-          reason: data.reason || 'Verified by Gemini 3.6 Multimodal Vision AI.',
+          reason: data.reason || 'Verified by Smart City Vision AI.',
           ai_verified: true,
         })
         setCategory(validCategory)
         setTitle(validTitle)
         setDescription(validDescription)
+        return
       }
+      throw new Error(`Backend analyze returned status ${res.status}`)
     } catch (cause) {
-      console.warn('AI analysis error:', cause)
-      setScanState('fake')
-      setScanReason('AI analysis could not verify image. Please upload a clear photo of an authentic civic issue.')
+      console.warn('Backend AI analysis error, falling back to direct client AI:', cause)
+      // Fallback: Direct Client Gemini AI
+      try {
+        const base64Data = await new Promise<string>((resolve) => {
+          const img = new window.Image()
+          img.onload = () => {
+            const maxDim = 800
+            let w = img.width
+            let h = img.height
+            if (w > maxDim || h > maxDim) {
+              if (w > h) {
+                h = Math.round((h * maxDim) / w)
+                w = maxDim
+              } else {
+                w = Math.round((w * maxDim) / h)
+                h = maxDim
+              }
+            }
+            const canvas = document.createElement('canvas')
+            canvas.width = w
+            canvas.height = h
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, w, h)
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+              resolve(dataUrl.split(',')[1])
+            } else {
+              resolve('')
+            }
+          }
+          img.onerror = () => resolve('')
+          img.src = URL.createObjectURL(candidate)
+        })
+
+        const geminiKey = atob('QVEuQWI4Uk42SUhaaXpWZGNDZWh1UC13cHJRYTFRRk5sRGZXX09BN2VUaTFrRUFzUEluOXc=')
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiKey}`
+        const prompt = `You are an expert municipal infrastructure AI vision inspector for a smart city platform.
+Carefully inspect the image:
+1. REJECT (is_civic_issue=false, decision="reject") if the image is a vehicle/car/selfie/meme with NO visible public infrastructure damage or garbage.
+2. ACCEPT (is_civic_issue=true, decision="accept") if the image shows real public infrastructure issues such as garbage dump piles, road potholes, water leaks, or broken streetlights, even if taken from a street or car window.
+   - For garbage/solid waste: category="sanitation", department="Sanitation Department", severity=8.
+   - For potholes/damaged road: category="road_infrastructure", department="Roads Department", severity=7.
+   - For water leaks/floods: category="water_drainage", department="Water Department", severity=8.
+   - For electrical/streetlights: category="street_electrical", department="Electrical Department", severity=6.
+
+Return valid JSON with: is_civic_issue (boolean), decision ("accept"|"reject"), category (string), department (string), severity (integer 1-10), suggested_title (string), suggested_description (string), reason (string).`
+
+        const payload = {
+          contents: [
+            {
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: 'image/jpeg',
+                    data: base64Data,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            response_mime_type: 'application/json',
+            temperature: 0.0,
+          },
+        }
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (!response.ok) throw new Error(`Gemini API returned status ${response.status}`)
+        const resJson = await response.json()
+        const rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text
+        const data = JSON.parse(rawText)
+
+        if (!data.is_civic_issue || data.decision === 'reject') {
+          setScanState('fake')
+          setScanReason(data.reason || 'The uploaded photo shows a vehicle, selfie, or non-civic scene without public infrastructure damage.')
+          setTitle('')
+        } else {
+          const validCategory = data.category || 'sanitation'
+          const validDepartment = data.department || (validCategory === 'sanitation' ? 'Sanitation Department' : 'Roads Department')
+          const validTitle = data.suggested_title || 'Civic Issue Report'
+          const validDescription = data.suggested_description || 'Reported municipal defect.'
+          const validSeverity = Number(data.severity) || 8
+
+          setScanState('valid')
+          setScanResult({
+            is_civic_issue: true,
+            decision: 'accept',
+            category: validCategory,
+            subtype: validCategory === 'sanitation' ? 'garbage_overflow' : 'pothole',
+            department: validDepartment,
+            confidence: 0.98,
+            severity: validSeverity,
+            hazards: [`${validCategory} defect identified`],
+            suggested_title: validTitle,
+            suggested_description: validDescription,
+            reason: data.reason || 'Verified by Gemini Vision AI.',
+            ai_verified: true,
+          })
+          setCategory(validCategory)
+          setTitle(validTitle)
+          setDescription(validDescription)
+        }
+      } catch (fallbackErr) {
+        console.warn('All AI inspection attempts failed:', fallbackErr)
+        setScanState('fake')
+        setScanReason('AI analysis could not verify image. Please upload a clear photo of an authentic civic issue.')
+      }
     }
   }
 
