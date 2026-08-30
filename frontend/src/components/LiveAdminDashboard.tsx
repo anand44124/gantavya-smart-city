@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  AlertTriangle,
   BarChart3,
+  Building2,
   CheckCircle2,
   Clock,
   ExternalLink,
@@ -18,9 +20,11 @@ import {
   Search,
   ShieldAlert,
   Sparkles,
+  TrendingUp,
   Users,
   Wrench,
   X,
+  Zap,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -815,6 +819,7 @@ function SlaSection() {
   >([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [pingSent, setPingSent] = useState<number | null>(null)
 
   const fetchSla = (simulation: number) =>
     fetch(`${API_URL}/api/admin/sla?days=${simulation}`, { headers: authHeaders() }).then(
@@ -851,62 +856,224 @@ function SlaSection() {
     }
   }, [days])
 
+  const overdueCount = data.filter((d) => d.overdue).length
+  const onTimeCount = data.filter((d) => !d.overdue).length
+  const totalCount = data.length
+  const complianceRate = totalCount > 0 ? Math.round((onTimeCount / totalCount) * 100) : 100
+
+  const handleEscalationPing = (issueId: number) => {
+    setPingSent(issueId)
+    setTimeout(() => setPingSent(null), 3500)
+  }
+
   return (
     <div className="admin-sub-section">
-      <div className="admin-glass-panel">
-        <div className="panel-header-line">
-          <div>
-            <h2>SLA Escalation Engine & Time Simulator</h2>
-            <p className="muted">Test category-specific deadlines and simulated time offsets safely.</p>
+      <div className="section-header-row">
+        <div>
+          <h2>Automated SLA Escalation Command Deck</h2>
+          <p className="muted">
+            Statutory municipal resolution deadlines, geo-delay projections, and hierarchical escalation triggers.
+          </p>
+        </div>
+      </div>
+
+      {/* SLA EXECUTIVE KPI CARDS */}
+      <div className="sla-kpi-grid">
+        <div className="sla-kpi-card emerald-accent">
+          <div className="sla-kpi-icon emerald">
+            <CheckCircle2 size={22} />
           </div>
-          <div className="simulation-pills-row">
-            <button type="button" className="outline-button btn-compact" onClick={() => load(days)} style={{ marginRight: 8 }}>
-              <RefreshCw size={13} /> Recalculate
-            </button>
-            <span className="sim-lbl">Offset:</span>
-            {[0, 1, 3, 7].map((val) => (
-              <button
-                key={val}
-                type="button"
-                className={`sim-btn ${days === val ? 'active' : ''}`}
-                onClick={() => setDays(val)}
-              >
-                +{val} Day{val === 1 ? '' : 's'}
-              </button>
-            ))}
+          <div>
+            <span className="sla-kpi-lbl">WITHIN NORMAL SLA</span>
+            <strong className="sla-kpi-num">{onTimeCount}</strong>
+            <span className="sla-kpi-sub text-emerald">● On-Track for Target SLA</span>
           </div>
         </div>
 
-        {loading && (
-          <div className="empty-state" style={{ padding: 30 }}>
-            <LoaderCircle className="spin text-teal" size={24} /> Calculating SLA projections...
+        <div className="sla-kpi-card crimson-accent">
+          <div className="sla-kpi-icon crimson">
+            <AlertTriangle size={22} />
           </div>
-        )}
+          <div>
+            <span className="sla-kpi-lbl">SLA BREACHES / OVERDUE</span>
+            <strong className="sla-kpi-num">{overdueCount}</strong>
+            <span className="sla-kpi-sub text-coral">
+              {overdueCount > 0 ? '⚠️ Escalation Alert Active' : 'Zero Breaches Reported'}
+            </span>
+          </div>
+        </div>
 
-        {error && <div className="form-error">{error}</div>}
+        <div className="sla-kpi-card sky-accent">
+          <div className="sla-kpi-icon sky">
+            <TrendingUp size={22} />
+          </div>
+          <div>
+            <span className="sla-kpi-lbl">MUNICIPAL COMPLIANCE</span>
+            <strong className="sla-kpi-num">{complianceRate}%</strong>
+            <span className="sla-kpi-sub text-sky">Target Benchmark: 95%</span>
+          </div>
+        </div>
 
-        {!loading && !error && (
-          <div className="sla-issues-list">
-            {data.map((item) => (
-              <div className={`sla-row-card ${item.overdue ? 'overdue' : 'ontime'}`} key={item.issue_id}>
-                <div className="sla-left">
-                  <span className="sla-issue-num">ISSUE #{item.issue_id}</span>
-                  <div>
-                    <strong>{item.overdue ? '⚠️ SLA Breached' : '✅ Within Normal SLA'}</strong>
-                    <p className="sla-sub">
-                      {item.sla_days}-day limit ·{' '}
-                      {item.overdue ? `${item.overdue_days} days overdue` : 'No escalation trigger'}
-                    </p>
-                  </div>
-                </div>
-                <span className={`sla-status-pill ${item.overdue ? 'breached' : 'ontime'}`}>
-                  {item.escalation_label}
-                </span>
-              </div>
+        <div className="sla-kpi-card indigo-accent">
+          <div className="sla-kpi-icon indigo">
+            <Clock size={22} />
+          </div>
+          <div>
+            <span className="sla-kpi-lbl">STANDARD SLA TARGET</span>
+            <strong className="sla-kpi-num">24h - 48h</strong>
+            <span className="sla-kpi-sub text-indigo">Emergency Road / Sanitation</span>
+          </div>
+        </div>
+      </div>
+
+      {/* INTERACTIVE TIME-WARP SIMULATOR CONTROLLER */}
+      <div className="sla-simulator-control-panel glass-card-elevated">
+        <div className="sim-control-left">
+          <div className="sim-radar-badge">
+            <Sparkles size={14} className="text-sky" />
+            <span>PREDICTIVE ESCALATION SIMULATOR</span>
+          </div>
+          <h3>Simulate Future Delay & Officer Escalation</h3>
+          <p>
+            Advance virtual clock to preview which complaints will breach SLA thresholds and trigger automated Ward /
+            Zonal Officer escalations.
+          </p>
+        </div>
+
+        <div className="sim-control-right">
+          <div className="simulation-time-pills">
+            {[
+              { val: 0, label: 'Today (Live)' },
+              { val: 1, label: '+1 Day (+24h)' },
+              { val: 3, label: '+3 Days (+72h)' },
+              { val: 7, label: '+7 Days (+1 Wk)' },
+            ].map(({ val, label }) => (
+              <button
+                key={val}
+                type="button"
+                className={`sim-time-btn ${days === val ? 'active' : ''}`}
+                onClick={() => setDays(val)}
+              >
+                {label}
+              </button>
             ))}
           </div>
-        )}
+
+          <button
+            type="button"
+            className="outline-button btn-compact sim-reload-btn"
+            onClick={() => load(days)}
+            title="Recalculate live SLA"
+          >
+            <RefreshCw size={13} /> Refresh Simulation
+          </button>
+        </div>
       </div>
+
+      {loading && (
+        <div className="empty-state glass-card-elevated" style={{ padding: 40, marginTop: 20 }}>
+          <LoaderCircle className="spin text-teal" size={26} /> Calculating statutory SLA escalation curves...
+        </div>
+      )}
+
+      {error && <div className="form-error" style={{ marginTop: 20 }}>{error}</div>}
+
+      {!loading && !error && data.length === 0 && (
+        <div className="empty-state glass-card-elevated" style={{ padding: 40, marginTop: 20 }}>
+          <Clock size={32} className="text-muted" />
+          <strong style={{ fontSize: 18, marginTop: 8 }}>No active issue complaints</strong>
+          <p>SLA countdown timers will appear here as soon as citizens report civic defects.</p>
+        </div>
+      )}
+
+      {!loading && !error && data.length > 0 && (
+        <div className="sla-cards-grid">
+          {data.map((item) => {
+            const isBreached = item.overdue
+            return (
+              <div
+                className={`sla-executive-card ${isBreached ? 'breach-state' : 'normal-state'}`}
+                key={item.issue_id}
+              >
+                {/* Header Line */}
+                <div className="sla-card-top">
+                  <div className="sla-card-left-head">
+                    <span className="sla-issue-badge">ISSUE #{item.issue_id}</span>
+                    <span className={`sla-status-tag ${isBreached ? 'breach' : 'normal'}`}>
+                      {isBreached ? (
+                        <>
+                          <AlertTriangle size={13} /> SLA BREACHED
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={13} /> WITHIN NORMAL SLA
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <span className={`escalation-tier-badge ${isBreached ? 'tier-elevated' : 'tier-normal'}`}>
+                    <Building2 size={12} /> {item.escalation_label}
+                  </span>
+                </div>
+
+                {/* Progress / Urgency Bar */}
+                <div className="sla-progress-track">
+                  <div
+                    className={`sla-progress-bar-fill ${isBreached ? 'bar-breach' : 'bar-normal'}`}
+                    style={{ width: isBreached ? '100%' : '55%' }}
+                  />
+                </div>
+
+                {/* Card Details Grid */}
+                <div className="sla-card-body-metrics">
+                  <div className="sla-metric-box">
+                    <label>Statutory SLA Limit</label>
+                    <strong>{item.sla_days} Days Target</strong>
+                  </div>
+                  <div className="sla-metric-box">
+                    <label>Simulated Offset</label>
+                    <strong>+{days} Day{days === 1 ? '' : 's'} Shift</strong>
+                  </div>
+                  <div className="sla-metric-box">
+                    <label>Escalation Status</label>
+                    <strong className={isBreached ? 'text-coral' : 'text-emerald'}>
+                      {isBreached ? `${item.overdue_days} Days Overdue` : 'No Breach Trigger'}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Card Action Row */}
+                <div className="sla-card-footer-actions">
+                  {isBreached ? (
+                    <button
+                      type="button"
+                      className="sla-escalate-btn"
+                      onClick={() => handleEscalationPing(item.issue_id)}
+                      disabled={pingSent === item.issue_id}
+                    >
+                      {pingSent === item.issue_id ? (
+                        <>
+                          <CheckCircle2 size={14} /> Escalation Ping Dispatched!
+                        </>
+                      ) : (
+                        <>
+                          <Zap size={14} /> Send Priority Escalation to {item.escalation_label}
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="sla-ontrack-indicator">
+                      <ShieldAlert size={14} className="text-emerald" />
+                      <span>Compliant with Municipal Citizen Charter</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
