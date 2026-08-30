@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="only light" />
+    <meta name="supported-color-schemes" content="only light" />
+    <meta name="description" content="Gantavya - Smart City Governance, Civic Infrastructure & Urban Mobility Platform" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Gantavya" />
+    <meta name="application-name" content="Gantavya" />
+    
+    <!-- iOS / Safari Home Screen Icon -->
+    <link rel="apple-touch-icon" href="/gantavya-icon-celtic-emerald.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/gantavya-icon-celtic-emerald.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/gantavya-icon-celtic-emerald.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/gantavya-icon-celtic-emerald.png" />
+    
+    <link rel="icon" type="image/png" href="/gantavya-icon-celtic-emerald.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Gantavya</title>
+    <script type="module" crossorigin src="/assets/index-BxMRiGY7.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CvwHEg11.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('[PWA ServiceWorker Notice]', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
