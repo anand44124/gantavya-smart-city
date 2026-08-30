@@ -115,7 +115,6 @@ export default function RealReportForm() {
 
       const res = await fetch(`${API_URL}/api/reports/analyze`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('civicpulse_token') || ''}` },
         body: formData,
       })
 

@@ -488,22 +488,37 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
     setLoading(true)
     setError('')
     try {
-      const fallbackUser: SessionUser = {
-        id: role === 'citizen' ? 1 : role === 'admin' ? 2 : 3,
-        full_name: role === 'citizen' ? 'Demo Citizen' : role === 'admin' ? 'Civic Admin' : 'Arjun Kumar',
-        email: `${role}@gantavya.demo`,
-        role,
-        avatar_url: role === 'citizen' ? 'avatar_1' : role === 'admin' ? 'avatar_3' : 'avatar_4',
-        points: role === 'citizen' ? 50000 : 0,
-        badge_level: role === 'citizen' ? 'Diamond Reformer' : 'Bronze Scout',
+      const res = await fetch(`${API_URL}/api/auth/demo-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        localStorage.setItem('civicpulse_token', data.access_token)
+        localStorage.setItem('civicpulse_user', JSON.stringify(data.user))
+        onAuth(data.user)
+        navigate(role === 'admin' ? '/admin' : role === 'worker' ? '/worker' : '/citizen')
+        return
       }
-      localStorage.setItem('civicpulse_token', 'demo-token-' + role)
-      localStorage.setItem('civicpulse_user', JSON.stringify(fallbackUser))
-      onAuth(fallbackUser)
-      navigate(role === 'admin' ? '/admin' : role === 'worker' ? '/worker' : '/citizen')
-    } finally {
-      setLoading(false)
+    } catch (e) {
+      console.warn('Backend demo login error, using local fallback:', e)
     }
+
+    // Local fallback
+    const fallbackUser: SessionUser = {
+      id: role === 'citizen' ? 1 : role === 'admin' ? 2 : 3,
+      full_name: role === 'citizen' ? 'Demo Citizen' : role === 'admin' ? 'Civic Admin' : 'Arjun Kumar',
+      email: `${role}@gantavya.demo`,
+      role,
+      avatar_url: role === 'citizen' ? 'avatar_1' : role === 'admin' ? 'avatar_3' : 'avatar_4',
+      points: role === 'citizen' ? 50000 : 0,
+      badge_level: role === 'citizen' ? 'Diamond Reformer' : 'Bronze Scout',
+    }
+    localStorage.setItem('civicpulse_user', JSON.stringify(fallbackUser))
+    onAuth(fallbackUser)
+    navigate(role === 'admin' ? '/admin' : role === 'worker' ? '/worker' : '/citizen')
+    setLoading(false)
   }
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
