@@ -2,7 +2,7 @@ import hashlib
 import uuid
 from pathlib import Path
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from auth import current_user
 from config.settings import settings
@@ -92,6 +92,9 @@ def get_evidence(report_ref: str, db: Session = Depends(get_db)):
     report = find_report(db, report_ref)
     if not report:
         raise HTTPException(404, "Report not found")
+    if report.evidence_base64:
+        import base64
+        return Response(content=base64.b64decode(report.evidence_base64), media_type="image/jpeg")
     evidence = Path(settings.upload_dir, report.evidence_path or "")
     if not report.evidence_path or not evidence.is_file():
         raise HTTPException(404, "Evidence not found")
@@ -185,6 +188,7 @@ async def create_report(
         title=clean_title,
         description=clean_description,
         evidence_path=filename,
+        evidence_base64=base64.b64encode(content).decode("utf-8"),
         evidence_sha256=digest,
         video_path=video_filename,
         latitude=latitude,

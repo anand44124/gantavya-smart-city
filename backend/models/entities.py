@@ -28,6 +28,7 @@ class Report(Base):
     title: Mapped[str] = mapped_column(String(240))
     description: Mapped[str | None] = mapped_column(Text())
     evidence_path: Mapped[str | None] = mapped_column(String(500))
+    evidence_base64: Mapped[str | None] = mapped_column(Text(), nullable=True)
     evidence_sha256: Mapped[str | None] = mapped_column(String(64), index=True)
     video_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     latitude: Mapped[float] = mapped_column()
