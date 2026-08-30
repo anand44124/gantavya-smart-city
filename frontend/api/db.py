@@ -1,25 +1,15 @@
-import os
-import shutil
-from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from config.settings import settings
 
-source_db = Path(__file__).resolve().parent / "civicpulse.db"
-target_db = Path("/tmp/civicpulse.db")
+db_url = settings.database_url
+if db_url.startswith("postgresql://") and "+psycopg" not in db_url:
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+elif db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
 
-# Ensure /tmp/uploads exists
-Path("/tmp/uploads").mkdir(parents=True, exist_ok=True)
-
-if not target_db.exists() and source_db.exists():
-    try:
-        shutil.copyfile(source_db, target_db)
-    except Exception:
-        pass
-
-db_url = f"sqlite:///{target_db}" if target_db.parent.exists() else settings.database_url
-
-engine = create_engine(db_url, connect_args={"check_same_thread": False})
+connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
+engine = create_engine(db_url, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 class Base(DeclarativeBase):

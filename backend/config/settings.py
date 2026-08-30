@@ -3,7 +3,7 @@ import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    database_url: str = "sqlite:////tmp/civicpulse.db"
+    database_url: str = os.getenv("DATABASE_URL") or "postgresql://neondb_owner:npg_Xi3dT8mKcveJ@ep-quiet-mouse-a5lo2723-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
     app_env: str = "production"
     auth_secret: str = "gantavya-super-secure-secret-2026"
     ai_provider: str = "gemini"
