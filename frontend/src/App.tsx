@@ -460,8 +460,8 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
         </nav>
       )}
 
-      {/* AUTO INACTIVITY SESSION PROTECTION (2 MIN TIMEOUT + 30S COUNTDOWN) */}
-      <InactivitySessionGuard onLogout={logout} timeoutMinutes={2} warningSeconds={30} />
+      {/* AUTO INACTIVITY SESSION PROTECTION (30 MIN TIMEOUT + 60S COUNTDOWN) */}
+      <InactivitySessionGuard onLogout={logout} timeoutMinutes={30} warningSeconds={60} />
     </div>
   )
 }
