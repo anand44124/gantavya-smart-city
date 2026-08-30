@@ -109,16 +109,35 @@ export default function RealReportForm() {
     setError('')
 
     try {
-      // 1. Convert candidate to base64
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-          const res = reader.result as string
-          const base64Clean = res.includes(',') ? res.split(',')[1] : res
-          resolve(base64Clean)
+      // 1. Fast Canvas Resize & Base64 Conversion (under 100KB for lightning inference)
+      const base64Data = await new Promise<string>((resolve) => {
+        const img = new window.Image()
+        img.onload = () => {
+          const maxDim = 800
+          let w = img.width
+          let h = img.height
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w)
+              w = maxDim
+            } else {
+              w = Math.round((w * maxDim) / h)
+              h = maxDim
+            }
+          }
+          const canvas = document.createElement('canvas')
+          canvas.width = w
+          canvas.height = h
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, w, h)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+            resolve(dataUrl.split(',')[1])
+          } else {
+            resolve('')
+          }
         }
-        reader.onerror = (e) => reject(e)
-        reader.readAsDataURL(candidate)
+        img.src = URL.createObjectURL(candidate)
       })
 
       // 2. Call Gemini 3.6 Flash Multi-modal Vision API directly
