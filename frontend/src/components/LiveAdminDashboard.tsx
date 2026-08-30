@@ -306,18 +306,6 @@ function IssueReview() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState<number | null>(null)
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
-  const [modalReports, setModalReports] = useState<any[]>([])
-
-  useEffect(() => {
-    if (selectedIssue) {
-      fetch(`${API_URL}/api/issues/${selectedIssue.id}/reports`, { headers: authHeaders() })
-        .then((r) => (r.ok ? r.json() : []))
-        .then((data) => setModalReports(Array.isArray(data) ? data : []))
-        .catch(() => setModalReports([]))
-    } else {
-      setModalReports([])
-    }
-  }, [selectedIssue])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -571,116 +559,150 @@ function IssueReview() {
       )}
 
       {/* FULL EVIDENCE REVIEW MODAL */}
-      {selectedIssue && (() => {
-        const photoUrl = selectedIssue.evidence_url || (modalReports.length > 0 ? (modalReports[0].evidence_url || modalReports[0].evidenceUrl) : null)
-        const videoUrl = selectedIssue.video_url || (modalReports.length > 0 ? (modalReports[0].video_url || modalReports[0].videoUrl) : null)
+      {selectedIssue && (
+        <EvidenceReviewModal
+          issue={selectedIssue}
+          onClose={() => setSelectedIssue(null)}
+          onResolve={resolve}
+          busy={busy}
+        />
+      )}
+    </div>
+  )
+}
 
-        return (
-          <div className="evidence-modal-backdrop" onClick={() => setSelectedIssue(null)}>
-            <div className="evidence-modal-card glass-card-elevated" onClick={(e) => e.stopPropagation()}>
-              <div className="evidence-modal-header">
-                <div className="modal-header-titles">
-                  <span className="issue-chip-id">#{selectedIssue.id}</span>
-                  <span className={`status-pill-badge ${statusColor(selectedIssue.status)}`}>
-                    {displayStatus(selectedIssue.status)}
-                  </span>
-                  <span className={`priority-badge ${(selectedIssue.priority || 'medium').toLowerCase()}`}>
-                    {selectedIssue.priority} Priority
-                  </span>
-                </div>
+function EvidenceReviewModal({
+  issue,
+  onClose,
+  onResolve,
+  busy,
+}: {
+  issue: Issue
+  onClose: () => void
+  onResolve: (issueId: number, status: string) => Promise<void>
+  busy: number | null
+}) {
+  const [reports, setReports] = useState<any[]>([])
+  const [imgError, setImgError] = useState(false)
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/issues/${issue.id}/reports`, { headers: authHeaders() })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setReports(Array.isArray(data) ? data : []))
+      .catch(() => setReports([]))
+  }, [issue.id])
+
+  const photoPath = issue.evidence_url || (reports.length > 0 ? (reports[0].evidence_url || reports[0].evidenceUrl) : null)
+  const videoPath = issue.video_url || (reports.length > 0 ? (reports[0].video_url || reports[0].videoUrl) : null)
+  const photoFullUrl = photoPath ? `${API_URL}${photoPath}` : null
+
+  return (
+    <div className="evidence-modal-backdrop" onClick={onClose}>
+      <div className="evidence-modal-card glass-card-elevated" onClick={(e) => e.stopPropagation()}>
+        <div className="evidence-modal-header">
+          <div className="modal-header-titles">
+            <span className="issue-chip-id">#{issue.id}</span>
+            <span className={`status-pill-badge ${statusColor(issue.status)}`}>
+              <span className={`status-dot-pulse ${statusColor(issue.status)}`} />
+              {displayStatus(issue.status)}
+            </span>
+            <span className={`priority-badge ${(issue.priority || 'medium').toLowerCase()}`}>
+              {issue.priority} Priority
+            </span>
+          </div>
+          <button
+            type="button"
+            className="icon-button modal-close-btn"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <h2 className="evidence-modal-title">{issue.title}</h2>
+
+        <div className="evidence-modal-body-grid">
+          {/* Evidence Media Column */}
+          <div className="evidence-media-col">
+            {photoFullUrl && !imgError ? (
+              <div className="evidence-full-img-wrapper">
+                <img
+                  src={photoFullUrl}
+                  alt={issue.title}
+                  className="evidence-full-img"
+                  onError={() => setImgError(true)}
+                />
+                <span className="evidence-live-badge"><Sparkles size={13} /> Verified Citizen Photo</span>
+              </div>
+            ) : (
+              <div className="no-photo-placeholder">
+                <ImageIcon size={36} className="text-muted" />
+                <p>Citizen Photo Attached</p>
+                <small className="text-muted">Issue #{issue.id} • {issue.department}</small>
+              </div>
+            )}
+
+            {videoPath && (
+              <div className="evidence-video-wrapper" style={{ marginTop: 12 }}>
+                <video src={`${API_URL}${videoPath}`} controls className="evidence-full-video" />
+              </div>
+            )}
+          </div>
+
+          {/* Details & Location Column */}
+          <div className="evidence-details-col">
+            <div className="evidence-detail-group">
+              <label className="evidence-detail-label">Department & Category</label>
+              <p className="evidence-detail-val"><b>{issue.department}</b> ({issue.category} / {issue.subtype})</p>
+            </div>
+
+            {issue.description && (
+              <div className="evidence-detail-group">
+                <label className="evidence-detail-label">Citizen Complaint Description</label>
+                <p className="evidence-detail-val evidence-desc-text">{issue.description}</p>
+              </div>
+            )}
+
+            <div className="evidence-detail-group">
+              <label className="evidence-detail-label">GPS Coordinates & Map Navigation</label>
+              <p className="evidence-detail-val">
+                <MapPin size={14} className="text-sky" /> {issue.latitude.toFixed(5)}, {issue.longitude.toFixed(5)}
+              </p>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${issue.latitude},${issue.longitude}`}
+                target="_blank"
+                rel="noreferrer"
+                className="google-maps-link-btn"
+              >
+                <ExternalLink size={13} /> Open Directions in Google Maps
+              </a>
+            </div>
+
+            <div className="evidence-modal-actions-box">
+              <label className="evidence-detail-label">Admin Actions & Dispatch</label>
+              <div className="modal-actions-row">
                 <button
                   type="button"
-                  className="icon-button modal-close-btn"
-                  onClick={() => setSelectedIssue(null)}
+                  className="modal-action-btn ack-btn"
+                  disabled={busy === issue.id}
+                  onClick={() => onResolve(issue.id, 'acknowledged')}
                 >
-                  <X size={18} />
+                  <CheckCircle2 size={16} /> Acknowledge Issue
                 </button>
-              </div>
-
-              <h2 className="evidence-modal-title">{selectedIssue.title}</h2>
-
-              <div className="evidence-modal-body-grid">
-                {/* Evidence Media Column */}
-                <div className="evidence-media-col">
-                  {photoUrl ? (
-                    <div className="evidence-full-img-wrapper">
-                      <img
-                        src={`${API_URL}${photoUrl}`}
-                        alt={selectedIssue.title}
-                        className="evidence-full-img"
-                      />
-                      <span className="evidence-live-badge"><Sparkles size={13} /> Verified Citizen Photo</span>
-                    </div>
-                  ) : (
-                    <div className="no-photo-placeholder">
-                      <ImageIcon size={36} className="text-muted" />
-                      <p>Citizen Photo Attached</p>
-                    </div>
-                  )}
-
-                  {videoUrl && (
-                    <div className="evidence-video-wrapper" style={{ marginTop: 12 }}>
-                      <video src={`${API_URL}${videoUrl}`} controls className="evidence-full-video" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Details & Location Column */}
-                <div className="evidence-details-col">
-                  <div className="evidence-detail-group">
-                    <label className="evidence-detail-label">Department & Category</label>
-                    <p className="evidence-detail-val"><b>{selectedIssue.department}</b> ({selectedIssue.category} / {selectedIssue.subtype})</p>
-                  </div>
-
-                  {selectedIssue.description && (
-                    <div className="evidence-detail-group">
-                      <label className="evidence-detail-label">Citizen Complaint Description</label>
-                      <p className="evidence-detail-val evidence-desc-text">{selectedIssue.description}</p>
-                    </div>
-                  )}
-
-                  <div className="evidence-detail-group">
-                    <label className="evidence-detail-label">GPS Coordinates & Map Navigation</label>
-                    <p className="evidence-detail-val">
-                      <MapPin size={14} className="text-sky" /> {selectedIssue.latitude.toFixed(5)}, {selectedIssue.longitude.toFixed(5)}
-                    </p>
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${selectedIssue.latitude},${selectedIssue.longitude}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="google-maps-link-btn"
-                    >
-                      <ExternalLink size={13} /> Open Directions in Google Maps
-                    </a>
-                  </div>
-
-                  <div className="evidence-modal-actions-box">
-                    <label className="evidence-detail-label">Admin Actions & Dispatch</label>
-                    <div className="modal-actions-row">
-                      <button
-                        type="button"
-                        className="modal-action-btn ack-btn"
-                        disabled={busy === selectedIssue.id}
-                        onClick={() => resolve(selectedIssue.id, 'acknowledged')}
-                      >
-                        <CheckCircle2 size={16} /> Acknowledge Issue
-                      </button>
-                      <button
-                        type="button"
-                        className="modal-action-btn resolve-btn"
-                        disabled={busy === selectedIssue.id}
-                        onClick={() => resolve(selectedIssue.id, 'resolved')}
-                      >
-                        <CheckCircle2 size={16} /> Mark as Resolved
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  className="modal-action-btn resolve-btn"
+                  disabled={busy === issue.id}
+                  onClick={() => onResolve(issue.id, 'resolved')}
+                >
+                  <CheckCircle2 size={16} /> Mark as Resolved
+                </button>
               </div>
             </div>
           </div>
-        )
-      })()}
+        </div>
+      </div>
     </div>
   )
 }
