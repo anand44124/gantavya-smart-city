@@ -144,13 +144,13 @@ def seed_demo_data():
             if b64_file.exists():
                 demo_b64 = b64_file.read_text().strip()
 
-            # Issue 1: Sanitation - Garbage Dump
+            # Issue 1: Sanitation - Garbage Dump (PRE-RESOLVED DEMO CASE)
             issue1 = Issue(
                 title="Massive Uncollected Garbage Dump on Main Road",
                 category="sanitation",
                 subtype="garbage_overflow",
                 department="Sanitation Department",
-                status="reported",
+                status="resolved",
                 priority="high",
                 priority_score=8.5,
                 latitude=26.22450,
@@ -171,11 +171,18 @@ def seed_demo_data():
                 evidence_base64=demo_b64 or None,
                 latitude=26.22450,
                 longitude=78.17500,
-                status="reported",
+                status="resolved",
             )
             db.add(report1)
 
-            # Issue 2: Road Infrastructure - Hazardous Pothole (Assigned to Arjun Kumar)
+            assignment1 = Assignment(
+                issue_id=issue1.id,
+                worker_id=demo_worker.id,
+                status="completed",
+            )
+            db.add(assignment1)
+
+            # Issue 2: Road Infrastructure - Hazardous Pothole (ACTIVE IN PROGRESS DEMO CASE)
             issue2 = Issue(
                 title="Hazardous Deep Pothole near City Center Circle",
                 category="road_infrastructure",
@@ -206,15 +213,15 @@ def seed_demo_data():
             )
             db.add(report2)
 
-            assignment = Assignment(
+            assignment2 = Assignment(
                 issue_id=issue2.id,
                 worker_id=demo_worker.id,
                 status="in_progress",
             )
-            db.add(assignment)
+            db.add(assignment2)
 
             db.commit()
-            print("Successfully seeded 2 authentic demo reports, issues, and worker assignments!")
+            print("Successfully seeded 2 authentic demo reports (1 Active, 1 Resolved)!")
     except Exception as e:
         print("[Startup Seed Notice]", e)
         db.rollback()
