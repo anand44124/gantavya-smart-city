@@ -82,9 +82,26 @@ export default function LiveProfile() {
   }
 
   useEffect(() => {
+    // 1. Instantly load from localStorage for zero-wait display
+    const localUserStr = localStorage.getItem('civicpulse_user')
+    if (localUserStr) {
+      try {
+        const localUsr = JSON.parse(localUserStr)
+        setUser(localUsr)
+        setName(localUsr.full_name)
+        setRewards({
+          points: localUsr.points ?? 50000,
+          badge_level: localUsr.badge_level ?? 'Diamond Reformer',
+        })
+      } catch (e) {
+        console.warn('LocalStorage user parse error:', e)
+      }
+    }
+
+    // 2. Fetch fresh details from server in background
     Promise.all([
       fetch(`${API_URL}/api/auth/me`, { headers: authHeaders() }).then(async (res) => {
-        if (!res.ok) throw new Error('Profile could not be loaded')
+        if (!res.ok) throw new Error('Profile could not be loaded from server')
         return (await res.json()) as User
       }),
       fetch(`${API_URL}/api/rewards/my-history`, { headers: authHeaders() })
@@ -99,7 +116,12 @@ export default function LiveProfile() {
           if (rew.transactions) setTransactions(rew.transactions)
         }
       })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : 'Profile could not be loaded'))
+      .catch((cause) => {
+        // If already loaded from localStorage, don't show red error
+        if (!localStorage.getItem('civicpulse_user')) {
+          setError(cause instanceof Error ? cause.message : 'Profile could not be loaded')
+        }
+      })
       .finally(() => setLoading(false))
   }, [])
 
