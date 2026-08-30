@@ -96,56 +96,65 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
         }
     }
 
-    try:
-        resp = requests.post(url, json=payload, timeout=12)
-        if resp.status_code == 200:
-            candidates = resp.json().get("candidates", [])
-            if candidates:
-                raw_text = candidates[0]["content"]["parts"][0]["text"]
-                parsed = extract_json(raw_text)
-                is_civic = bool(parsed.get("is_civic_issue", False))
-                dec_raw = str(parsed.get("decision", "accept")).lower()
-                is_rejected = "reject" in dec_raw or not is_civic
-                decision = "reject" if is_rejected else "accept"
+    for attempt in range(3):
+        try:
+            resp = requests.post(url, json=payload, timeout=15)
+            if resp.status_code == 200:
+                candidates = resp.json().get("candidates", [])
+                if candidates:
+                    raw_text = candidates[0]["content"]["parts"][0]["text"]
+                    parsed = extract_json(raw_text)
+                    is_civic = bool(parsed.get("is_civic_issue", False))
+                    dec_raw = str(parsed.get("decision", "accept")).lower()
+                    is_rejected = "reject" in dec_raw or not is_civic
+                    decision = "reject" if is_rejected else "accept"
 
-                raw_cat = str(parsed.get("category", "")).lower()
-                if "garbage" in raw_cat or "sanitation" in raw_cat or "waste" in raw_cat:
-                    cat = "sanitation"
-                elif "road" in raw_cat or "pothole" in raw_cat or "asphalt" in raw_cat:
-                    cat = "road_infrastructure"
-                elif "water" in raw_cat or "drain" in raw_cat or "flood" in raw_cat:
-                    cat = "water_drainage"
-                elif "electric" in raw_cat or "light" in raw_cat or "wire" in raw_cat:
-                    cat = "street_electrical"
-                elif "safety" in raw_cat or "manhole" in raw_cat:
-                    cat = "public_safety"
-                else:
-                    cat = "other" if is_rejected else "sanitation"
+                    raw_cat = str(parsed.get("category", "")).lower()
+                    if "garbage" in raw_cat or "sanitation" in raw_cat or "waste" in raw_cat:
+                        cat = "sanitation"
+                    elif "road" in raw_cat or "pothole" in raw_cat or "asphalt" in raw_cat:
+                        cat = "road_infrastructure"
+                    elif "water" in raw_cat or "drain" in raw_cat or "flood" in raw_cat:
+                        cat = "water_drainage"
+                    elif "electric" in raw_cat or "light" in raw_cat or "wire" in raw_cat:
+                        cat = "street_electrical"
+                    elif "safety" in raw_cat or "manhole" in raw_cat:
+                        cat = "public_safety"
+                    else:
+                        cat = "other" if is_rejected else "sanitation"
 
-                dept = DEPARTMENTS.get(cat, "Sanitation Department" if cat == "sanitation" else "Roads Department")
-                subtype = str(parsed.get("subtype", SUBTYPES.get(cat, "civic_issue")))
-                severity = int(parsed.get("severity", 8 if is_civic else 0))
-                title = str(parsed.get("suggested_title", "Civic Issue Report"))
-                desc = str(parsed.get("suggested_description", "Reported municipal infrastructure defect."))
-                reason = str(parsed.get("reason", "Verified by Google Gemini 3.6 Multimodal Vision AI."))
+                    dept = DEPARTMENTS.get(cat, "Sanitation Department" if cat == "sanitation" else "Roads Department")
+                    subtype = str(parsed.get("subtype", SUBTYPES.get(cat, "civic_issue")))
+                    severity = int(parsed.get("severity", 8 if is_civic else 0))
+                    title = str(parsed.get("suggested_title", "Civic Issue Report"))
+                    desc = str(parsed.get("suggested_description", "Reported municipal infrastructure defect."))
+                    reason = str(parsed.get("reason", "Verified by Google Gemini 3.6 Multimodal Vision AI."))
 
-                return {
-                    "is_civic_issue": not is_rejected,
-                    "is_pothole": cat == "road_infrastructure" and "pothole" in subtype.lower(),
-                    "decision": decision,
-                    "category": cat,
-                    "subtype": subtype,
-                    "department": dept,
-                    "confidence": float(parsed.get("confidence", 0.98)),
-                    "severity": severity,
-                    "hazards": parsed.get("hazards") or [f"{cat} hazard identified"],
-                    "suggested_title": title,
-                    "suggested_description": desc,
-                    "reason": reason,
-                    "message": reason if is_rejected else f"Verified as {title}.",
-                }
-    except Exception as e:
-        print("[Gemini 3.6 Error]", e)
+                    return {
+                        "is_civic_issue": not is_rejected,
+                        "is_pothole": cat == "road_infrastructure" and "pothole" in subtype.lower(),
+                        "decision": decision,
+                        "category": cat,
+                        "subtype": subtype,
+                        "department": dept,
+                        "confidence": float(parsed.get("confidence", 0.98)),
+                        "severity": severity,
+                        "hazards": parsed.get("hazards") or [f"{cat} hazard identified"],
+                        "suggested_title": title,
+                        "suggested_description": desc,
+                        "reason": reason,
+                        "message": reason if is_rejected else f"Verified as {title}.",
+                    }
+            elif resp.status_code == 429 and attempt < 2:
+                import time
+                time.sleep(1.5)
+                continue
+        except Exception as e:
+            print(f"[Gemini 3.6 Error attempt {attempt+1}]", e)
+            if attempt < 2:
+                import time
+                time.sleep(1.0)
+                continue
 
     return {
         "is_civic_issue": False,
