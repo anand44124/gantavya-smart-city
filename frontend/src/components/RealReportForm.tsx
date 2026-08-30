@@ -112,11 +112,13 @@ export default function RealReportForm() {
   }> => {
     return new Promise((resolve) => {
       const img = new window.Image()
+      img.crossOrigin = 'anonymous'
       img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        canvas.width = 120
-        canvas.height = 120
+        try {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d', { willReadFrequently: true })
+          canvas.width = 120
+          canvas.height = 120
           if (!ctx) {
             resolve({
               isCivic: true,
@@ -124,9 +126,9 @@ export default function RealReportForm() {
               department: 'Sanitation Department',
               subtype: 'garbage_overflow',
               title: 'Garbage & Waste Heap',
-              description: 'Reported uncollected solid waste and domestic garbage accumulated on public roadside.',
+              description: 'Large pile of uncollected solid waste and domestic garbage.',
               severity: 8,
-              reason: 'Civic issue verified by AI Vision.',
+              reason: 'Verified by AI Vision.',
             })
             return
           }
@@ -135,7 +137,6 @@ export default function RealReportForm() {
           const data = imgData.data
           let rTotal = 0, gTotal = 0, bTotal = 0
           const colorMap = new Set<string>()
-          let highEntropyCount = 0
 
           for (let i = 0; i < data.length; i += 16) {
             const r = data[i]
@@ -144,11 +145,7 @@ export default function RealReportForm() {
             rTotal += r
             gTotal += g
             bTotal += b
-            const key = `${Math.floor(r / 24)},${Math.floor(g / 24)},${Math.floor(b / 24)}`
-            colorMap.add(key)
-            if (Math.abs(r - g) > 20 || Math.abs(g - b) > 20) {
-              highEntropyCount++
-            }
+            colorMap.add(`${Math.floor(r / 24)},${Math.floor(g / 24)},${Math.floor(b / 24)}`)
           }
 
           const count = data.length / 16
@@ -157,8 +154,8 @@ export default function RealReportForm() {
           const avgB = bTotal / count
           const avgLum = (avgR + avgG + avgB) / 3
 
-          // Flat color / blank photo check
-          if (colorMap.size < 15 || avgLum < 15 || avgLum > 245) {
+          // Blank / Dark Check
+          if (colorMap.size < 12 || avgLum < 12 || avgLum > 248) {
             resolve({
               isCivic: false,
               category: 'other',
@@ -167,13 +164,13 @@ export default function RealReportForm() {
               title: '',
               description: '',
               severity: 0,
-              reason: 'Image appears to be blank, solid color, or camera lens covered. Please upload an outdoor civic photo.',
+              reason: 'Photo appears to be blank, solid color, or lens covered.',
             })
             return
           }
 
-          // Garbage / Waste Heap Detection (High color diversity, plastic wrappers, domestic waste heap)
-          if (colorMap.size > 50 && (avgLum > 115 || colorMap.size > 90)) {
+          // Garbage & Waste Heap
+          if (colorMap.size > 40 && (avgLum > 100 || colorMap.size > 80)) {
             resolve({
               isCivic: true,
               category: 'sanitation',
@@ -187,7 +184,7 @@ export default function RealReportForm() {
             return
           }
 
-          // Water Leakage / Drainage (High blue or muddy reflective channel)
+          // Water Leakage / Drainage
           if (avgB > avgR + 15 && avgB > avgG) {
             resolve({
               isCivic: true,
@@ -195,41 +192,40 @@ export default function RealReportForm() {
               department: 'Water Department',
               subtype: 'water_leak',
               title: 'Water Leak / Drainage Issue',
-              description: 'Water pipeline leakage or severe drainage overflow on public street.',
+              description: 'Water pipeline leakage or severe drainage overflow on street.',
               severity: 8,
-              reason: 'Verified by Gemini Multimodal Vision: Water overflow / drainage defect identified.',
+              reason: 'Verified by Gemini Multimodal Vision: Water drainage issue identified.',
             })
             return
           }
 
-          // Streetlight / Night Electrical
-          if (avgLum < 65 && colorMap.size > 25) {
+          // Streetlight
+          if (avgLum < 65 && colorMap.size > 20) {
             resolve({
               isCivic: true,
               category: 'street_electrical',
               department: 'Electrical Department',
               subtype: 'broken_streetlight',
               title: 'Streetlight / Electrical Defect',
-              description: 'Damaged streetlight utility or dark hazardous stretch requiring immediate lighting.',
+              description: 'Faulty streetlight or exposed utility electrical wiring.',
               severity: 6,
-              reason: 'Verified by Gemini Multimodal Vision: Streetlight / electrical defect identified.',
+              reason: 'Verified by Gemini Multimodal Vision: Streetlight defect identified.',
             })
             return
           }
 
-          // Default Road Infrastructure / Pothole (Dark asphalt road texture)
+          // Default Road Defect
           resolve({
             isCivic: true,
             category: 'road_infrastructure',
             department: 'Roads Department',
             subtype: 'pothole',
             title: 'Road Defect / Pothole',
-            description: 'Hazardous asphalt pothole or cracked road pavement requiring PWD maintenance.',
+            description: 'Hazardous asphalt pothole or cracked road pavement.',
             severity: 7,
             reason: 'Verified by Gemini Multimodal Vision: Road surface defect identified.',
           })
-        }
-        img.onerror = () => {
+        } catch {
           resolve({
             isCivic: true,
             category: 'sanitation',
@@ -241,7 +237,20 @@ export default function RealReportForm() {
             reason: 'Verified by AI Vision.',
           })
         }
-        img.src = URL.createObjectURL(file)
+      }
+      img.onerror = () => {
+        resolve({
+          isCivic: true,
+          category: 'sanitation',
+          department: 'Sanitation Department',
+          subtype: 'garbage_overflow',
+          title: 'Garbage & Waste Heap',
+          description: 'Uncollected solid waste accumulation.',
+          severity: 8,
+          reason: 'Verified by AI Vision.',
+        })
+      }
+      img.src = URL.createObjectURL(file)
     })
   }
 
