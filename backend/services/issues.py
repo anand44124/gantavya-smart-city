@@ -69,12 +69,21 @@ def to_issue_out(db: Session, issue: Issue) -> IssueOut:
             created_at=ev.created_at
         ))
 
+    # Find primary report linked to this issue for initial citizen photo & description
+    primary_report = db.query(Report).filter(Report.issue_id == issue.id).order_by(Report.created_at.asc()).first()
+    evidence_url = f"/api/reports/{primary_report.id}/evidence" if (primary_report and primary_report.evidence_path) else None
+    video_url = f"/api/reports/{primary_report.id}/video" if (primary_report and primary_report.video_path) else None
+    description = primary_report.description if primary_report else None
+
     return IssueOut.model_validate(issue, from_attributes=True).model_copy(update={
         "assigned_worker_id": assignment.worker_id if assignment else None,
         "assigned_worker_name": worker.full_name if worker else None,
         "still_present": still_present,
         "marked_fixed": marked_fixed,
         "resolution_proofs": proofs,
+        "evidence_url": evidence_url,
+        "video_url": video_url,
+        "description": description,
     })
 
 RESOLVED_STATUSES = {"resolved", "verified_closed", "completed"}

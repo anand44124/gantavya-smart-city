@@ -3,17 +3,23 @@ import {
   BarChart3,
   CheckCircle2,
   Clock,
+  ExternalLink,
+  Eye,
   FileText,
+  Image as ImageIcon,
   Layers,
   LayoutDashboard,
   LoaderCircle,
   Map,
+  MapPin,
   Radar,
   Radio,
   RefreshCw,
   ShieldAlert,
+  Sparkles,
   Users,
   Wrench,
+  X,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -298,6 +304,7 @@ function IssueReview() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState<number | null>(null)
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -316,7 +323,7 @@ function IssueReview() {
   }, [load])
 
   const assign = async (issueId: number, workerId: number) => {
-    if (!workerId) return
+    if (!workerId) return setError('Choose a staff member first')
     setBusy(issueId)
     const response = await fetch(`${API_URL}/api/admin/issues/${issueId}/assign`, {
       method: 'POST',
@@ -329,6 +336,9 @@ function IssueReview() {
     setIssues((current) =>
       current.map((issue) => (issue.id === issueId ? { ...issue, ...data, status: 'assigned' } : issue))
     )
+    if (selectedIssue?.id === issueId) {
+      setSelectedIssue((prev) => (prev ? { ...prev, ...data, status: 'assigned' } : null))
+    }
   }
 
   const resolve = async (issueId: number, status: string) => {
@@ -344,6 +354,9 @@ function IssueReview() {
     setIssues((current) =>
       current.map((issue) => (issue.id === issueId ? { ...issue, ...data } : issue))
     )
+    if (selectedIssue?.id === issueId) {
+      setSelectedIssue((prev) => (prev ? { ...prev, ...data, status } : null))
+    }
   }
 
   return (
@@ -351,7 +364,7 @@ function IssueReview() {
       <div className="section-header-row">
         <div>
           <h2>Issue Review & Field Worker Allocation</h2>
-          <p className="muted">Assign field staff to verified issues and monitor repair progress.</p>
+          <p className="muted">Inspect citizen photo evidence, assign field staff, and monitor repair progress.</p>
         </div>
         <button type="button" className="outline-button" onClick={load}>
           <RefreshCw size={14} /> Refresh Queue
@@ -391,10 +404,29 @@ function IssueReview() {
 
               <h3 className="admin-issue-title">{issue.title}</h3>
 
+              {/* Photo Evidence Thumbnail Preview */}
+              {issue.evidence_url && (
+                <div className="admin-evidence-preview-box" onClick={() => setSelectedIssue(issue)}>
+                  <img
+                    src={`${API_URL}${issue.evidence_url}`}
+                    alt={issue.title}
+                    className="admin-thumb-img"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                  />
+                  <div className="admin-thumb-overlay">
+                    <span className="thumb-zoom-tag"><Eye size={13} /> View Photo Proof</span>
+                  </div>
+                </div>
+              )}
+
+              {issue.description && (
+                <p className="admin-issue-desc-snippet">{issue.description.slice(0, 110)}...</p>
+              )}
+
               <div className="admin-issue-meta">
                 <span>📍 {issue.department}</span>
                 <span>• {issue.report_count} {issue.report_count === 1 ? 'report' : 'reports'}</span>
-                <span>• Assigned: <b>{issue.assigned_worker_name || 'Unassigned'}</b></span>
+                <span>• Staff: <b>{issue.assigned_worker_name || 'Unassigned'}</b></span>
               </div>
 
               <div className="admin-action-row">
@@ -426,6 +458,15 @@ function IssueReview() {
                 <button
                   type="button"
                   className="outline-button btn-compact"
+                  onClick={() => setSelectedIssue(issue)}
+                  title="Inspect full photo and location"
+                >
+                  <Eye size={13} /> Review
+                </button>
+
+                <button
+                  type="button"
+                  className="outline-button btn-compact"
                   disabled={busy === issue.id}
                   onClick={() => resolve(issue.id, 'acknowledged')}
                 >
@@ -443,6 +484,113 @@ function IssueReview() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* FULL EVIDENCE REVIEW MODAL */}
+      {selectedIssue && (
+        <div className="evidence-modal-backdrop" onClick={() => setSelectedIssue(null)}>
+          <div className="evidence-modal-card glass-card-elevated" onClick={(e) => e.stopPropagation()}>
+            <div className="evidence-modal-header">
+              <div className="modal-header-titles">
+                <span className="issue-chip-id">#{selectedIssue.id}</span>
+                <span className={`status-pill-badge ${statusColor(selectedIssue.status)}`}>
+                  {displayStatus(selectedIssue.status)}
+                </span>
+                <span className={`priority-badge ${(selectedIssue.priority || 'medium').toLowerCase()}`}>
+                  {selectedIssue.priority} Priority
+                </span>
+              </div>
+              <button
+                type="button"
+                className="icon-button modal-close-btn"
+                onClick={() => setSelectedIssue(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <h2 className="evidence-modal-title">{selectedIssue.title}</h2>
+
+            <div className="evidence-modal-body-grid">
+              {/* Evidence Media Column */}
+              <div className="evidence-media-col">
+                {selectedIssue.evidence_url ? (
+                  <div className="evidence-full-img-wrapper">
+                    <img
+                      src={`${API_URL}${selectedIssue.evidence_url}`}
+                      alt={selectedIssue.title}
+                      className="evidence-full-img"
+                    />
+                    <span className="evidence-live-badge"><Sparkles size={13} /> Verified Citizen Photo</span>
+                  </div>
+                ) : (
+                  <div className="no-photo-placeholder">
+                    <ImageIcon size={36} className="text-muted" />
+                    <p>No photo attached</p>
+                  </div>
+                )}
+
+                {selectedIssue.video_url && (
+                  <div className="evidence-video-wrapper" style={{ marginTop: 12 }}>
+                    <video src={`${API_URL}${selectedIssue.video_url}`} controls className="evidence-full-video" />
+                  </div>
+                )}
+              </div>
+
+              {/* Details & Location Column */}
+              <div className="evidence-details-col">
+                <div className="evidence-detail-group">
+                  <label className="evidence-detail-label">Department & Category</label>
+                  <p className="evidence-detail-val"><b>{selectedIssue.department}</b> ({selectedIssue.category} / {selectedIssue.subtype})</p>
+                </div>
+
+                {selectedIssue.description && (
+                  <div className="evidence-detail-group">
+                    <label className="evidence-detail-label">Citizen Complaint Description</label>
+                    <p className="evidence-detail-val evidence-desc-text">{selectedIssue.description}</p>
+                  </div>
+                )}
+
+                <div className="evidence-detail-group">
+                  <label className="evidence-detail-label">GPS Coordinates & Map Navigation</label>
+                  <p className="evidence-detail-val">
+                    <MapPin size={14} className="text-sky" /> {selectedIssue.latitude.toFixed(5)}, {selectedIssue.longitude.toFixed(5)}
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${selectedIssue.latitude},${selectedIssue.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="google-maps-link-btn"
+                  >
+                    <ExternalLink size={13} /> Open Directions in Google Maps
+                  </a>
+                </div>
+
+                <div className="evidence-modal-actions-box">
+                  <label className="evidence-detail-label">Admin Actions</label>
+                  <div className="modal-actions-row">
+                    <button
+                      type="button"
+                      className="outline-button"
+                      disabled={busy === selectedIssue.id}
+                      onClick={() => resolve(selectedIssue.id, 'acknowledged')}
+                    >
+                      Acknowledge
+                    </button>
+                    <button
+                      type="button"
+                      className="success-button"
+                      disabled={busy === selectedIssue.id}
+                      onClick={() => resolve(selectedIssue.id, 'resolved')}
+                    >
+                      Mark Resolved
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

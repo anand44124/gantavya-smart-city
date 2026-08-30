@@ -36,6 +36,9 @@ class IssueOut(BaseModel):
     still_present: int = 0
     marked_fixed: int = 0
     resolution_proofs: list[ResolutionProofOut] = []
+    evidence_url: str | None = None
+    video_url: str | None = None
+    description: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     model_config = {"from_attributes": True}

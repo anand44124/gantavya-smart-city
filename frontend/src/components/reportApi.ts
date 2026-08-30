@@ -44,6 +44,9 @@ export type Issue = {
   assigned_worker_name: string | null
   still_present: number
   marked_fixed: number
+  evidence_url?: string | null
+  video_url?: string | null
+  description?: string | null
   resolution_proofs?: ResolutionProof[]
 }
 
