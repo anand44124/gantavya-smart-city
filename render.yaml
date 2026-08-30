@@ -12,7 +12,7 @@ services:
       - key: AI_PROVIDER
         value: gemini
       - key: AI_MODEL
-        value: gemini-3.6-flash
+        value: gemini-2.5-flash
       - key: AUTH_SECRET
         value: gantavya-super-secure-secret-2026
       - key: DATABASE_URL

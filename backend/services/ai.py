@@ -6,6 +6,11 @@ import asyncio
 import requests
 from PIL import Image
 from config.settings import settings
+try:
+    from services.local_ai import analyze_civic_image_local, validate_resolution_proof_local
+except ImportError:
+    analyze_civic_image_local = None
+    validate_resolution_proof_local = None
 
 DEPARTMENTS = {
     "road_infrastructure": "Roads Department",
@@ -43,7 +48,16 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
     b64_image = base64.b64encode(buf.getvalue()).decode("utf-8")
 
     api_key = (settings.ai_api_key or "").strip()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
+    if not api_key:
+        return {
+            "is_civic_issue": False, "is_pothole": False, "decision": "reject",
+            "category": "other", "subtype": "ai_unavailable",
+            "department": "Municipal Services", "confidence": 0.0, "severity": 0,
+            "hazards": [], "suggested_title": "", "suggested_description": "",
+            "reason": "AI Vision is not configured. Please try again shortly.",
+            "message": "AI Vision analysis could not be completed.",
+        }
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.ai_model}:generateContent"
 
     prompt = (
         "You are an expert municipal infrastructure AI vision inspector for a smart city reporting platform.\n"
@@ -98,7 +112,7 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
 
     for attempt in range(3):
         try:
-            resp = requests.post(url, json=payload, timeout=15)
+            resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(3, 10))
             if resp.status_code == 200:
                 candidates = resp.json().get("candidates", [])
                 if candidates:
@@ -145,30 +159,26 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
                         "reason": reason,
                         "message": reason if is_rejected else f"Verified as {title}.",
                     }
-            elif resp.status_code == 429 and attempt < 2:
-                import time
-                time.sleep(1.5)
-                continue
+            else:
+                print(f"[Gemini Vision] status={resp.status_code} body={resp.text[:300]}")
+                break
         except Exception as e:
-            print(f"[Gemini 3.6 Error attempt {attempt+1}]", e)
-            if attempt < 2:
-                import time
-                time.sleep(1.0)
-                continue
+            print(f"[Gemini Vision] request failed: {type(e).__name__}: {e}")
+            break
 
     return {
         "is_civic_issue": False,
         "is_pothole": False,
         "decision": "reject",
         "category": "other",
-        "subtype": "ai_busy",
+        "subtype": "ai_unavailable",
         "department": "Municipal Services",
         "confidence": 0.0,
         "severity": 0,
         "hazards": [],
         "suggested_title": "",
         "suggested_description": "",
-        "reason": "AI Vision server is busy. Please try again.",
+        "reason": "AI Vision is temporarily unavailable. Please retry in a moment.",
         "message": "AI Vision analysis could not be completed.",
     }
 
@@ -190,8 +200,20 @@ async def analyze_civic_image(content: bytes, mime_type: str, category_hint: str
             "message": "Please upload a valid image file.",
         }
 
+    # If provider is explicitly set to local, run local edge vision
+    if settings.ai_provider == "local" and analyze_civic_image_local:
+        return analyze_civic_image_local(content, category_hint)
+
     pil_img = Image.open(io.BytesIO(content))
-    return await asyncio.to_thread(_sync_analyze_civic_gemini, pil_img)
+    result = await asyncio.to_thread(_sync_analyze_civic_gemini, pil_img)
+
+    # Automatic fallback if Gemini is down, rate-limited, or unavailable
+    if (not result.get("is_civic_issue") and result.get("subtype") == "ai_unavailable") or result.get("confidence", 0.0) == 0.0:
+        if analyze_civic_image_local:
+            print("[AI Service] Gemini unavailable -> falling back to Local Edge Vision Model.")
+            return analyze_civic_image_local(content, category_hint)
+
+    return result
 
 def _sync_validate_resolution_gemini(pil_img: Image.Image, category: str) -> dict[str, object]:
     if pil_img.mode != "RGB":
@@ -201,7 +223,7 @@ def _sync_validate_resolution_gemini(pil_img: Image.Image, category: str) -> dic
     b64_image = base64.b64encode(buf.getvalue()).decode("utf-8")
 
     api_key = (settings.ai_api_key or "").strip()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.ai_model}:generateContent"
     dept = DEPARTMENTS.get(category, "Municipal Services")
 
     prompt = (
@@ -236,7 +258,7 @@ def _sync_validate_resolution_gemini(pil_img: Image.Image, category: str) -> dic
     }
 
     try:
-        resp = requests.post(url, json=payload, timeout=12)
+        resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(3, 10))
         if resp.status_code == 200:
             candidates = resp.json().get("candidates", [])
             if candidates:
@@ -257,11 +279,17 @@ def _sync_validate_resolution_gemini(pil_img: Image.Image, category: str) -> dic
         "decision": "accept",
         "confidence": 0.90,
         "work_summary": "Field repair verified via on-site telemetry photo audit.",
-        "reason": "Authentic on-site resolution photograph verified.",
+        "reason": "AI validation was unavailable; resolution proof needs a retry.",
     }
 
 async def validate_pothole_image(content: bytes, mime_type: str, category: str = "road_infrastructure") -> dict[str, object]:
+    if settings.ai_provider == "local" and validate_resolution_proof_local:
+        return validate_resolution_proof_local(content, category)
+
     pil_img = Image.open(io.BytesIO(content))
-    return await asyncio.to_thread(_sync_validate_resolution_gemini, pil_img, category)
+    result = await asyncio.to_thread(_sync_validate_resolution_gemini, pil_img, category)
+    if "unavailable" in result.get("reason", "").lower() and validate_resolution_proof_local:
+        return validate_resolution_proof_local(content, category)
+    return result
 
 validate_resolution_proof = validate_pothole_image
