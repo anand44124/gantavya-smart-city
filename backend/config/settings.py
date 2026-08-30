@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     # keep provider credentials in the repository or ship them to browsers.
     ai_api_key: str = ""
     whatsapp_ai_api_key: str = base64.b64decode("QVEuQWI4Uk42THl6Z0xhd0MxME5iZ0JuOS1mcTZ2UG02dGJIUkN2XzRSa1BLLXdTNDFsVGc=").decode()
-    ai_model: str = "gemini-2.5-flash"
+    ai_model: str = "gemini-3.6-flash"
     upload_dir: str = "/tmp/uploads"
     smtp_server: str = "smtp.gmail.com"
     smtp_port: int = 587
