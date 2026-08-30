@@ -174,8 +174,8 @@ export default function RealReportForm() {
             return
           }
 
-          // Garbage / Waste Heap Detection (High color diversity, plastic wrappers, domestic waste)
-          if (colorMap.size > 80 && highEntropyCount > count * 0.4) {
+          // Garbage / Waste Heap Detection (High color diversity, plastic wrappers, domestic waste heap)
+          if (colorMap.size > 50 && (avgLum > 115 || colorMap.size > 90)) {
             resolve({
               isCivic: true,
               category: 'sanitation',
@@ -205,7 +205,7 @@ export default function RealReportForm() {
           }
 
           // Streetlight / Night Electrical
-          if (avgLum < 65 && colorMap.size > 30) {
+          if (avgLum < 65 && colorMap.size > 25) {
             resolve({
               isCivic: true,
               category: 'street_electrical',
@@ -219,7 +219,7 @@ export default function RealReportForm() {
             return
           }
 
-          // Default Road Infrastructure / Pothole
+          // Default Road Infrastructure / Pothole (Dark asphalt road texture)
           resolve({
             isCivic: true,
             category: 'road_infrastructure',
