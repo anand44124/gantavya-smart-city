@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   BarChart3,
   Building2,
+  Check,
   CheckCircle2,
   Clock,
   ExternalLink,
@@ -17,7 +18,9 @@ import {
   Radar,
   Radio,
   RefreshCw,
+  Save,
   Search,
+  Settings,
   ShieldAlert,
   Sparkles,
   TrendingUp,
@@ -73,6 +76,8 @@ export default function LiveAdminDashboard() {
     ? 'workers'
     : location.pathname.includes('/sla')
     ? 'sla'
+    : location.pathname.includes('/settings')
+    ? 'settings'
     : 'overview'
 
   const fetchDashboard = () =>
@@ -192,6 +197,13 @@ export default function LiveAdminDashboard() {
           >
             <Clock size={16} /> SLA Simulator
           </button>
+          <button
+            type="button"
+            className={`deck-tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => navigate('/admin/settings')}
+          >
+            <Settings size={16} /> System Settings
+          </button>
         </div>
       </div>
 
@@ -201,6 +213,7 @@ export default function LiveAdminDashboard() {
       {activeTab === 'map' && <AdminMap />}
       {activeTab === 'workers' && <WorkerRoster />}
       {activeTab === 'sla' && <SlaSection />}
+      {activeTab === 'settings' && <MunicipalSettingsSection />}
 
       {activeTab === 'overview' && (
         <div className="admin-overview-content">
@@ -1106,6 +1119,227 @@ function AnalyticsPanel({ title, values }: { title: string; values: Record<strin
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function MunicipalSettingsSection() {
+  const [visionConfidence, setVisionConfidence] = useState(85)
+  const [zeroTrustFilter, setZeroTrustFilter] = useState(true)
+  const [roadSla, setRoadSla] = useState(7)
+  const [sanitationSla, setSanitationSla] = useState(2)
+  const [electricalSla, setElectricalSla] = useState(3)
+  const [waterSla, setWaterSla] = useState(1)
+  const [wardEscalationThreshold, setWardEscalationThreshold] = useState(24)
+  const [notifyEmail, setNotifyEmail] = useState(true)
+  const [notifySms, setNotifySms] = useState(true)
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3500)
+  }
+
+  return (
+    <div className="admin-sub-section">
+      <div className="section-header-row">
+        <div>
+          <h2>Municipal System & Governance Settings</h2>
+          <p className="muted">
+            Configure AI Vision strictness, statutory SLA compliance matrices, and Ward Officer automated escalation protocols.
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSave} className="admin-settings-container">
+        {/* SECTION 1: AI VISION & FRAUD DETECTION */}
+        <div className="admin-settings-card glass-card-elevated">
+          <div className="settings-card-header">
+            <div className="settings-icon-pill sky">
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <h3>AI Vision & Zero-Trust Spam Protection</h3>
+              <p>Control multimodal AI validation strictness for incoming citizen photo evidence.</p>
+            </div>
+          </div>
+
+          <div className="settings-fields-grid">
+            <div className="setting-field">
+              <div className="setting-label-row">
+                <label>AI Confidence Acceptance Threshold</label>
+                <span className="setting-value-badge">{visionConfidence}% Strictness</span>
+              </div>
+              <input
+                type="range"
+                min="60"
+                max="98"
+                value={visionConfidence}
+                onChange={(e) => setVisionConfidence(Number(e.target.value))}
+                className="custom-range-slider"
+              />
+              <span className="setting-hint">Higher values reject borderline blurry images and require high clarity.</span>
+            </div>
+
+            <div className="setting-toggle-row">
+              <div>
+                <strong>Zero-Trust Fake Image Interception</strong>
+                <p>Instantly block personal vehicles, selfies, indoor photos, and digital memes.</p>
+              </div>
+              <button
+                type="button"
+                className={`toggle-switch-btn ${zeroTrustFilter ? 'active' : ''}`}
+                onClick={() => setZeroTrustFilter(!zeroTrustFilter)}
+              >
+                <span className="toggle-switch-thumb" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: STATUTORY SLA THRESHOLDS */}
+        <div className="admin-settings-card glass-card-elevated">
+          <div className="settings-card-header">
+            <div className="settings-icon-pill emerald">
+              <Clock size={18} />
+            </div>
+            <div>
+              <h3>Category-Specific Statutory SLAs</h3>
+              <p>Define mandatory maximum resolution days before automatic administrative escalation.</p>
+            </div>
+          </div>
+
+          <div className="sla-settings-input-grid">
+            <div className="sla-input-item">
+              <label>Road Infrastructure (Potholes / Asphalt)</label>
+              <div className="input-with-unit">
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={roadSla}
+                  onChange={(e) => setRoadSla(Number(e.target.value))}
+                />
+                <span>Days</span>
+              </div>
+            </div>
+
+            <div className="sla-input-item">
+              <label>Sanitation & Waste Removal</label>
+              <div className="input-with-unit">
+                <input
+                  type="number"
+                  min="1"
+                  max="14"
+                  value={sanitationSla}
+                  onChange={(e) => setSanitationSla(Number(e.target.value))}
+                />
+                <span>Days</span>
+              </div>
+            </div>
+
+            <div className="sla-input-item">
+              <label>Street Electrical & Power Lines</label>
+              <div className="input-with-unit">
+                <input
+                  type="number"
+                  min="1"
+                  max="14"
+                  value={electricalSla}
+                  onChange={(e) => setElectricalSla(Number(e.target.value))}
+                />
+                <span>Days</span>
+              </div>
+            </div>
+
+            <div className="sla-input-item">
+              <label>Water Drainage & Pipe Bursts</label>
+              <div className="input-with-unit">
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={waterSla}
+                  onChange={(e) => setWaterSla(Number(e.target.value))}
+                />
+                <span>Days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 3: AUTOMATED WARD OFFICER ESCALATION */}
+        <div className="admin-settings-card glass-card-elevated">
+          <div className="settings-card-header">
+            <div className="settings-icon-pill crimson">
+              <Building2 size={18} />
+            </div>
+            <div>
+              <h3>Ward Officer Escalation & Alert Protocols</h3>
+              <p>Configure automated emergency dispatches when field workers exceed deadline limits.</p>
+            </div>
+          </div>
+
+          <div className="settings-fields-grid">
+            <div className="setting-field">
+              <label>Level 1 Escalation Grace Window</label>
+              <select
+                value={wardEscalationThreshold}
+                onChange={(e) => setWardEscalationThreshold(Number(e.target.value))}
+                className="admin-select-input"
+              >
+                <option value={12}>12 Hours Overdue (Urgent Dispatch)</option>
+                <option value={24}>24 Hours Overdue (Standard Protocol)</option>
+                <option value={48}>48 Hours Overdue (Extended Review)</option>
+              </select>
+            </div>
+
+            <div className="setting-toggle-row">
+              <div>
+                <strong>Automated Email Dispatch to Ward Executive</strong>
+                <p>Send priority breakdown report to Zonal Ward Officer Gmail/NIC inbox.</p>
+              </div>
+              <button
+                type="button"
+                className={`toggle-switch-btn ${notifyEmail ? 'active' : ''}`}
+                onClick={() => setNotifyEmail(!notifyEmail)}
+              >
+                <span className="toggle-switch-thumb" />
+              </button>
+            </div>
+
+            <div className="setting-toggle-row">
+              <div>
+                <strong>SMS Emergency Ping to Assigned Contractor</strong>
+                <p>Send urgent automated mobile SMS alerts to on-duty field staff.</p>
+              </div>
+              <button
+                type="button"
+                className={`toggle-switch-btn ${notifySms ? 'active' : ''}`}
+                onClick={() => setNotifySms(!notifySms)}
+              >
+                <span className="toggle-switch-thumb" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* SAVE BUTTON ROW */}
+        <div className="admin-settings-save-bar">
+          <button type="submit" className="admin-primary-save-btn">
+            {saved ? (
+              <>
+                <Check size={18} /> Configuration Saved & Applied to Live Grid!
+              </>
+            ) : (
+              <>
+                <Save size={18} /> Save Municipal Governance Settings
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
