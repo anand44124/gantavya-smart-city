@@ -9127,6 +9127,92 @@ select:focus, input:focus, textarea:focus {
   }
 }
 
+/* ADMIN QUEUE FILTER BAR & SEARCH */
+.admin-queue-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 0 20px;
+  flex-wrap: wrap;
+}
+
+.admin-filter-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-filter-pill {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.7);
+  color: #475569;
+  transition: all 0.2s ease;
+}
+
+.admin-filter-pill:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
+.admin-filter-pill.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 4px 14px -3px rgba(2, 132, 199, 0.4);
+}
+
+.admin-filter-pill.active.resolved-active {
+  background: #059669;
+  border-color: #059669;
+  box-shadow: 0 4px 14px -3px rgba(5, 150, 105, 0.4);
+}
+
+.admin-search-box-wrapper {
+  position: relative;
+  min-width: 260px;
+  flex: 1;
+  max-width: 380px;
+}
+
+.admin-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.admin-queue-search-input {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.admin-queue-search-input:focus {
+  border-color: #0284c7;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.issue-card-resolved {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  background: rgba(240, 253, 244, 0.5) !important;
+}
+
 /* ADMIN EVIDENCE PREVIEW & REVIEW MODAL */
 .admin-evidence-preview-box {
   position: relative;

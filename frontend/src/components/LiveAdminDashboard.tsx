@@ -15,6 +15,7 @@ import {
   Radar,
   Radio,
   RefreshCw,
+  Search,
   ShieldAlert,
   Sparkles,
   Users,
@@ -359,6 +360,32 @@ function IssueReview() {
     }
   }
 
+  const [filterTab, setFilterTab] = useState<'active' | 'resolved' | 'all'>('active')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const isResolved = (status: string) => {
+    const s = (status || '').toLowerCase()
+    return s === 'resolved' || s === 'completed' || s === 'verified_closed' || s === 'verified' || s === 'closed'
+  }
+
+  const activeCount = issues.filter((i) => !isResolved(i.status)).length
+  const resolvedCount = issues.filter((i) => isResolved(i.status)).length
+
+  const filteredIssues = issues.filter((issue) => {
+    const query = searchQuery.toLowerCase().trim()
+    const matchesSearch =
+      !query ||
+      issue.title.toLowerCase().includes(query) ||
+      issue.department.toLowerCase().includes(query) ||
+      String(issue.id).includes(query)
+
+    if (!matchesSearch) return false
+
+    if (filterTab === 'active') return !isResolved(issue.status)
+    if (filterTab === 'resolved') return isResolved(issue.status)
+    return true
+  })
+
   return (
     <div className="admin-sub-section">
       <div className="section-header-row">
@@ -371,6 +398,44 @@ function IssueReview() {
         </button>
       </div>
 
+      {/* FILTER TABS & SEARCH CONTROLS */}
+      <div className="admin-queue-filter-bar">
+        <div className="admin-filter-pills-row">
+          <button
+            type="button"
+            className={`admin-filter-pill ${filterTab === 'active' ? 'active' : ''}`}
+            onClick={() => setFilterTab('active')}
+          >
+            ⚡ Active Queue ({activeCount})
+          </button>
+          <button
+            type="button"
+            className={`admin-filter-pill ${filterTab === 'resolved' ? 'active resolved-active' : ''}`}
+            onClick={() => setFilterTab('resolved')}
+          >
+            ✅ Resolved & Repaired ({resolvedCount})
+          </button>
+          <button
+            type="button"
+            className={`admin-filter-pill ${filterTab === 'all' ? 'active' : ''}`}
+            onClick={() => setFilterTab('all')}
+          >
+            🌐 All Issues ({issues.length})
+          </button>
+        </div>
+
+        <div className="admin-search-box-wrapper">
+          <Search size={15} className="admin-search-icon" />
+          <input
+            type="text"
+            placeholder="Search by ID, title, or department..."
+            className="admin-queue-search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
       {loading && (
         <div className="empty-state glass-card-elevated" style={{ padding: 30 }}>
           <LoaderCircle className="spin text-teal" size={24} /> Loading issue queue...
@@ -379,18 +444,24 @@ function IssueReview() {
 
       {error && <div className="form-error">{error}</div>}
 
-      {!loading && issues.length === 0 && (
+      {!loading && filteredIssues.length === 0 && (
         <div className="empty-state glass-card-elevated" style={{ padding: 40 }}>
           <FileText size={32} className="text-muted" />
-          <strong style={{ fontSize: 18, marginTop: 8 }}>No active issue records</strong>
-          <p>Validated complaints will appear here after citizen reports pass AI checks.</p>
+          <strong style={{ fontSize: 18, marginTop: 8 }}>
+            {filterTab === 'resolved' ? 'No resolved issues in this view' : 'No active issue records'}
+          </strong>
+          <p>
+            {filterTab === 'resolved'
+              ? 'When issues are marked resolved by staff, they will appear in this resolved archive.'
+              : 'Validated complaints will appear here after citizen reports pass AI checks.'}
+          </p>
         </div>
       )}
 
-      {!loading && issues.length > 0 && (
+      {!loading && filteredIssues.length > 0 && (
         <div className="admin-issues-table-grid">
-          {issues.map((issue) => (
-            <div className="admin-issue-card" key={issue.id}>
+          {filteredIssues.map((issue) => (
+            <div className={`admin-issue-card ${isResolved(issue.status) ? 'issue-card-resolved' : ''}`} key={issue.id}>
               <div className="issue-header-line">
                 <span className="issue-chip-id">#{issue.id}</span>
                 <span className={`status-pill-badge ${statusColor(issue.status)}`}>
