@@ -58,12 +58,17 @@ SMTP_PASSWORD="cjlfaokjmynwwaxb"
 
 ## ⚡ Recent Enhancements & Fixes Applied
 
-1. **AI Multimodal Vision Engine (`services/ai.py`):**
+1. **Masterpiece Official Civic Honor Certificate Generator:**
+   - Integrated `CivicCertificateModal.tsx` in `LiveProfile.tsx`.
+   - Generates high-resolution, government-grade Civic Excellence Certificates with double gold foil borders, Celtic Emerald watermark, unique serial verification code (`GAN-2026-HONOR-XXXX`), and official signatures.
+   - Includes 1-Click `Print / Save as PDF` button (`@media print` CSS engine).
+
+2. **AI Multimodal Vision Engine (`services/ai.py`):**
    * Fixed `IndentationError` and missing `import time`.
    * Added multi-model fallback (`gemini-3.6-flash`, `gemini-1.5-flash`, `gemini-2.0-flash`) with instant fail-safe response.
    * Tested & verified on `/api/reports/analyze` returning `200 OK`.
 
-2. **Streamlined Quick Demo Auth:**
+3. **Streamlined Quick Demo Auth:**
    * Removed complex email OTP flow to eliminate delay and spam filter issues.
    * Prominently features 1-click Quick Demo Access pills on the login card (`Citizen Demo`, `Admin Demo`, `Worker Demo`).
    * Centered flexbox Glassmorphism design across all viewport resolutions.
