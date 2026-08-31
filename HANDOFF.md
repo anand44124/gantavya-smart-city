@@ -58,9 +58,10 @@ SMTP_PASSWORD="cjlfaokjmynwwaxb"
 
 ## ⚡ Recent Enhancements & Fixes Applied
 
-1. **Masterpiece Official Civic Honor Certificate Generator:**
+1. **Masterpiece Official Civic Honor Certificate Generator (LOCKED MASTER DESIGN):**
    - Integrated `CivicCertificateModal.tsx` in `LiveProfile.tsx`.
-   - Generates high-resolution, government-grade Civic Excellence Certificates with double gold foil borders, Celtic Emerald watermark, unique serial verification code (`GAN-2026-HONOR-XXXX`), and official signatures.
+   - Uses the exact user-designed master certificate template with authentic signatures (`Dr. S. K. Verma` & `Arjun Sharma`), Gantavya Smart City 2026 Gold Monument Medallion, and double gold foil borders.
+   - **Accessible Dynamic Name:** Recipient name is dynamically bound to the user profile, directly editable inline on the certificate canvas (`contentEditable`), and customizable via the top action bar for instantaneous custom certificates.
    - Includes 1-Click `Print / Save as PDF` button (`@media print` CSS engine).
 
 2. **AI Multimodal Vision Engine (`services/ai.py`):**

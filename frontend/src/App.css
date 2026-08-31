@@ -11318,8 +11318,8 @@ select:focus, input:focus, textarea:focus {
 }
 
 .cert-monument-seal-img {
-  width: 95px;
-  height: 95px;
+  width: 110px;
+  height: 110px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(180, 83, 9, 0.25));
+  mix-blend-mode: multiply;
 }
