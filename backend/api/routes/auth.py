@@ -218,8 +218,11 @@ def forgot_password(payload: ForgotPasswordIn, background_tasks: BackgroundTasks
     expires = datetime.now(timezone.utc) + timedelta(minutes=10)
     PASSWORD_RESET_OTPS[email_clean] = {"otp": otp_code, "expires_at": expires}
 
-    # Dispatch real-time email asynchronously in background (zero UI wait time)
-    background_tasks.add_task(send_otp_email, email_clean, otp_code, user.full_name)
+    # Dispatch real-time email synchronously before returning (prevents serverless freeze)
+    try:
+        sent, email_notice = send_otp_email(email_clean, otp_code, user.full_name)
+    except Exception as e:
+        print("[Auth Forgot Password] Email dispatch notice:", e)
 
     return {
         "status": "ok",
