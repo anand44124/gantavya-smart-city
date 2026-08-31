@@ -719,7 +719,7 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
           </button>
         </div>
 
-        {mode === 'login' && (
+        {mode === 'login' && authMethod === 'email' && (
           <div className="demo-accounts-box">
             <p className="demo-label">{t('quick_demo_access', 'Quick Demo Access')}</p>
             <div className="demo-buttons">

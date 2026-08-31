@@ -321,7 +321,7 @@ def verify_phone_otp(payload: PhoneVerifyOtpIn, db: Session = Depends(get_db)):
             password_hash=hash_password(f"OtpPhone@{otp_clean}"),
             role="citizen",
             avatar_url="avatar_1",
-            points=500,
+            points=0,
             badge_level="Bronze Scout",
         )
         db.add(user)
