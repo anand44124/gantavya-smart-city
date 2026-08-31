@@ -15,7 +15,7 @@ interface ModernOtpInputProps {
 
 export const ModernOtpInput: React.FC<ModernOtpInputProps> = ({
   phone,
-  length = 6,
+  length = 4,
   loading,
   error,
   demoOtp,
