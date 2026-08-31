@@ -110,33 +110,6 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
         }
     }
 
-    for attempt in range(3):
-        try:
-            resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(3, 10))
-            if resp.status_code == 200:
-                candidates = resp.json().get("candidates", [])
-                if candidates:
-                    raw_text = candidates[0]["content"]["parts"][0]["text"]
-                    parsed = extract_json(raw_text)
-                    is_civic = bool(parsed.get("is_civic_issue", False))
-                    dec_raw = str(parsed.get("decision", "accept")).lower()
-                    is_rejected = "reject" in dec_raw or not is_civic
-                    decision = "reject" if is_rejected else "accept"
-
-                    raw_cat = str(parsed.get("category", "")).lower()
-                    if "garbage" in raw_cat or "sanitation" in raw_cat or "waste" in raw_cat:
-                        cat = "sanitation"
-                    elif "road" in raw_cat or "pothole" in raw_cat or "asphalt" in raw_cat:
-                        cat = "road_infrastructure"
-                    elif "water" in raw_cat or "drain" in raw_cat or "flood" in raw_cat:
-                        cat = "water_drainage"
-                    elif "electric" in raw_cat or "light" in raw_cat or "wire" in raw_cat:
-                        cat = "street_electrical"
-                    elif "safety" in raw_cat or "manhole" in raw_cat:
-                        cat = "public_safety"
-                    else:
-                        cat = "other" if is_rejected else "sanitation"
-
                     dept = DEPARTMENTS.get(cat, "Sanitation Department" if cat == "sanitation" else "Roads Department")
                     subtype = str(parsed.get("subtype", SUBTYPES.get(cat, "civic_issue")))
                     severity = int(parsed.get("severity", 8 if is_civic else 0))
