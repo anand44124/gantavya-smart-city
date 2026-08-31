@@ -219,7 +219,10 @@ def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
     PASSWORD_RESET_OTPS[email_clean] = {"otp": otp_code, "expires_at": expires}
 
     # Dispatch real-time email to user's Gmail / email
-    sent, email_notice = send_otp_email(email_clean, otp_code, user.full_name)
+    try:
+        sent, email_notice = send_otp_email(email_clean, otp_code, user.full_name)
+    except Exception as e:
+        print("[Auth Forgot Password] Email dispatch notice:", e)
 
     return {
         "status": "ok",
