@@ -2,6 +2,7 @@ import io
 import json
 import logging
 import time
+from typing import Dict, Tuple
 try:
     from google import genai
     from google.genai import types
