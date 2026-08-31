@@ -199,6 +199,18 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
       ]
 
   useEffect(() => {
+    const path = location.pathname
+    if (path.includes('/leaderboard')) document.title = 'Gantavya | Civic Leaderboard'
+    else if (path.includes('/rewards')) document.title = 'Gantavya | Rewards & Transit Vouchers'
+    else if (path.includes('/report')) document.title = 'Gantavya | Report Civic Issue'
+    else if (path.includes('/community')) document.title = 'Gantavya | Community Activity'
+    else if (path.includes('/admin')) document.title = 'Gantavya | Municipal SLA Deck'
+    else if (path.includes('/worker')) document.title = 'Gantavya | Field Worker Cockpit'
+    else if (path.includes('/profile')) document.title = 'Gantavya | Citizen Profile'
+    else document.title = 'Gantavya | Smart Civic Governance'
+  }, [location.pathname])
+
+  useEffect(() => {
     if (!notesOpen) return
     void fetchActivity()
       .then(setEvents)
