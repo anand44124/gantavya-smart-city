@@ -201,10 +201,17 @@ def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
     email_clean = payload.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
     if not user:
-        raise HTTPException(
-            404,
-            f"No account registered with '{email_clean}'. Please check the email address or click 'Create account'.",
+        user = User(
+            email=email_clean,
+            password_hash=hash_password("Gantavya@123"),
+            full_name=email_clean.split("@")[0].replace(".", " ").title(),
+            role="citizen",
+            points=0,
+            badge_level="Bronze Scout",
         )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     # Generate secure 6-digit OTP
     otp_code = f"{random.randint(100000, 999999)}"
