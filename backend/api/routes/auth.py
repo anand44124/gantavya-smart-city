@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from auth import create_token, current_user, hash_password, verify_password
 from db import get_db
