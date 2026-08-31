@@ -715,7 +715,6 @@ function ForgotPasswordModal({
   const [otp, setOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [demoOtp, setDemoOtp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -740,7 +739,6 @@ function ForgotPasswordModal({
         else if (Array.isArray(data.detail)) msg = data.detail.map((d: any) => d.msg).join(', ')
         throw new Error(msg)
       }
-      setDemoOtp(data.demo_otp || '')
       setStep('otp')
     } catch (err: any) {
       setError(err.message || 'Failed to request verification code')
@@ -798,7 +796,6 @@ function ForgotPasswordModal({
     setStep('email')
     setEmail('')
     setOtp('')
-    setDemoOtp('')
     setNewPassword('')
     setConfirmPassword('')
     setError('')
@@ -855,21 +852,6 @@ function ForgotPasswordModal({
                 </p>
               </div>
             </div>
-
-            {demoOtp && (
-              <div style={{ margin: '10px 0 14px', padding: '10px 14px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', color: '#166534', fontWeight: 600 }}>
-                  ⚡ Verification Code: <strong style={{ letterSpacing: '2px', color: '#0f172a' }}>{demoOtp}</strong>
-                </span>
-                <button
-                  type="button"
-                  style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
-                  onClick={() => setOtp(demoOtp)}
-                >
-                  Auto-Fill
-                </button>
-              </div>
-            )}
 
             <label>
               <span>6-Digit Verification Code (OTP)</span>

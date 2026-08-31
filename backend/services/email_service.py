@@ -95,10 +95,17 @@ def send_otp_email(to_email: str, otp_code: str, user_name: str = "Citizen") -> 
         msg.attach(part_text)
         msg.attach(part_html)
 
-        with smtplib.SMTP(server_host, server_port, timeout=12) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, [to_email], msg.as_string())
+        # Primary: Direct SSL 465 (Reliable on Vercel serverless / AWS cloud)
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [to_email], msg.as_string())
+        except Exception as ssl_err:
+            print(f"[Gantavya Email Service] SSL 465 notice, trying 587: {ssl_err}")
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [to_email], msg.as_string())
 
         print(f"[Gantavya Email Service] 🚀 Real-time email successfully delivered to {to_email}")
         return True, f"Verification OTP successfully sent to {to_email}"
