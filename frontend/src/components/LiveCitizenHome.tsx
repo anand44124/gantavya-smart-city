@@ -100,7 +100,7 @@ export default function LiveCitizenHome() {
         <div className="hero-grid-layout">
           <div className="hero-copy-col">
             <h1 className="hero-main-title">
-              Lives Peacefully.
+              Live Peacefully.
               <span className="hero-sub-gradient"> Shape Your City.</span>
             </h1>
             <p className="hero-lead-text">

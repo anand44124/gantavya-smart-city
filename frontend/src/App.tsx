@@ -54,24 +54,27 @@ function App() {
 }
 
 function SplashScreenOverlay() {
-  const [visible, setVisible] = useState(true)
+  const [visible, setVisible] = useState(() => {
+    return !sessionStorage.getItem('gantavya_splash_shown')
+  })
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
-    // Stage 1: pure white (0.4s) -> Stage 2: progressive calligraphy drawing reveal (1.6s) -> Stage 3: hold (0.6s) -> Stage 4: fade out (0.6s)
+    if (!visible) return
+    sessionStorage.setItem('gantavya_splash_shown', 'true')
     const fadeTimer = window.setTimeout(() => {
       setFading(true)
-    }, 2600)
+    }, 2200)
 
     const removeTimer = window.setTimeout(() => {
       setVisible(false)
-    }, 3200)
+    }, 2600)
 
     return () => {
       window.clearTimeout(fadeTimer)
       window.clearTimeout(removeTimer)
     }
-  }, [])
+  }, [visible])
 
   if (!visible) return null
 
@@ -509,7 +512,7 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
     // Local fallback
     const fallbackUser: SessionUser = {
       id: role === 'citizen' ? 1 : role === 'admin' ? 2 : 3,
-      full_name: role === 'citizen' ? 'Demo Citizen' : role === 'admin' ? 'Civic Admin' : 'Arjun Kumar',
+      full_name: role === 'citizen' ? 'Demo Citizen' : role === 'admin' ? 'Gantavya Admin' : 'Arjun Kumar',
       email: `${role}@gantavya.demo`,
       role,
       avatar_url: role === 'citizen' ? 'avatar_1' : role === 'admin' ? 'avatar_3' : 'avatar_4',
