@@ -11171,3 +11171,17 @@ select:focus, input:focus, textarea:focus {
   color: #065f46;
   transform: rotate(-2deg);
 }
+
+.cert-signature-img-space {
+  height: 45px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.cert-sig-img {
+  max-height: 40px;
+  max-width: 140px;
+  object-fit: contain;
+}
