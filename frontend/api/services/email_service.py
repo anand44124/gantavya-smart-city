@@ -85,9 +85,12 @@ def send_otp_email(to_email: str, otp_code: str, user_name: str = "Citizen") -> 
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
+        msg["Subject"] = f"🔐 Your Gantavya Verification Code: {otp_code}"
         msg["From"] = f"{from_name} <{smtp_user}>"
         msg["To"] = to_email
+        msg["X-Priority"] = "1"
+        msg["Priority"] = "Urgent"
+        msg["Importance"] = "high"
 
         part_html = MIMEText(html_content, "html")
         part_text = MIMEText(f"Your Gantavya Password Reset Code is: {otp_code} (Valid for 10 mins).", "plain")
@@ -95,14 +98,14 @@ def send_otp_email(to_email: str, otp_code: str, user_name: str = "Citizen") -> 
         msg.attach(part_text)
         msg.attach(part_html)
 
-        # Primary: Direct SSL 465 (Reliable on Vercel serverless / AWS cloud)
+        # Primary: Direct SSL 465 (Fastest on cloud serverless)
         try:
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=6) as server:
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_user, [to_email], msg.as_string())
         except Exception as ssl_err:
             print(f"[Gantavya Email Service] SSL 465 notice, trying 587: {ssl_err}")
-            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=6) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_user, [to_email], msg.as_string())
