@@ -2,14 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell,
-  CheckCircle2,
   ChevronRight,
   CircleUserRound,
   FileText,
   Gift,
   Globe,
   Home,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Map,
@@ -477,7 +475,6 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [forgotModalOpen, setForgotModalOpen] = useState(false)
 
   const [sessionExpiredNotice] = useState<string | null>(() => {
     const notice = sessionStorage.getItem('gantavya_session_expired')
@@ -651,18 +648,7 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
             />
           </label>
           <label>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>{t('password_label', 'Password')}</span>
-              {mode === 'login' && (
-                <button
-                  type="button"
-                  className="forgot-password-link-btn"
-                  onClick={() => setForgotModalOpen(true)}
-                >
-                  {t('forgot_password_btn', 'Forgot password?')}
-                </button>
-              )}
-            </div>
+            <span>{t('password_label', 'Password')}</span>
             <input
               name="password"
               type="password"
@@ -685,247 +671,6 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
             {mode === 'login' ? t('create_an_acc', 'Create an account') : t('sign_in_btn', 'Sign in')}
           </Link>
         </p>
-      </div>
-
-      {/* FORGOT PASSWORD MODAL */}
-      <ForgotPasswordModal
-        isOpen={forgotModalOpen}
-        onClose={() => setForgotModalOpen(false)}
-        onResetSuccess={(userEmail) => {
-          setEmail(userEmail)
-          setForgotModalOpen(false)
-        }}
-      />
-    </div>
-  )
-}
-
-function ForgotPasswordModal({
-  isOpen,
-  onClose,
-  onResetSuccess,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onResetSuccess: (email: string) => void
-}) {
-  const { t } = useTranslation()
-  const [step, setStep] = useState<'email' | 'otp' | 'success'>('email')
-  const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
-
-  if (!isOpen) return null
-
-  const handleRequestOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim()) return
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        let msg = 'Could not send verification code'
-        if (typeof data.detail === 'string') msg = data.detail
-        else if (Array.isArray(data.detail)) msg = data.detail.map((d: any) => d.msg).join(', ')
-        throw new Error(msg)
-      }
-      setStep('otp')
-    } catch (err: any) {
-      setError(err.message || 'Failed to request verification code')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const cleanPwd = newPassword.trim()
-    const cleanConfirm = confirmPassword.trim()
-
-    if (cleanPwd.length < 8) {
-      setError('Password must be at least 8 characters long.')
-      return
-    }
-    if (!/\d/.test(cleanPwd) && !/[!@#$%^&*(),.?":{}|<>]/.test(cleanPwd)) {
-      setError('Password must contain at least one number or special character.')
-      return
-    }
-    if (cleanPwd !== cleanConfirm) {
-      setError('Passwords do not match. Please re-enter.')
-      return
-    }
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch(`${API_URL}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.trim(),
-          otp: otp.trim(),
-          new_password: cleanPwd,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        let msg = 'Password reset failed'
-        if (typeof data.detail === 'string') msg = data.detail
-        else if (Array.isArray(data.detail)) msg = data.detail.map((d: any) => d.msg).join(', ')
-        throw new Error(msg)
-      }
-      setSuccessMsg(data.message || 'Password successfully reset!')
-      setStep('success')
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset password')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleClose = () => {
-    setStep('email')
-    setEmail('')
-    setOtp('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setError('')
-    onClose()
-  }
-
-  return (
-    <div className="modal-backdrop" onClick={handleClose}>
-      <div className="modal-glass-card forgot-password-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div className="modal-header-icon teal">
-            <KeyRound size={22} />
-          </div>
-          <div>
-            <h2>{t('forgot_password_title', 'Reset Your Password')}</h2>
-            <p className="card-subtext">{t('forgot_password_sub', 'Securely recover your Gantavya citizen account')}</p>
-          </div>
-          <button type="button" className="modal-close-btn" onClick={handleClose}>
-            <X size={18} />
-          </button>
-        </div>
-
-        {step === 'email' && (
-          <form className="forgot-step-form" onSubmit={handleRequestOtp}>
-            <p className="forgot-instruction">
-              Enter your registered email address and we'll dispatch a 6-digit OTP verification code to reset your password.
-            </p>
-            <label>
-              <span>{t('email_label', 'Registered Email Address')}</span>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                autoFocus
-              />
-            </label>
-            {error && <p className="form-error">{error}</p>}
-            <button className="primary-button full" disabled={loading}>
-              {loading ? 'Sending OTP code...' : 'Send Verification OTP'} <ChevronRight size={16} />
-            </button>
-          </form>
-        )}
-
-        {step === 'otp' && (
-          <form className="forgot-step-form" onSubmit={handleResetPassword}>
-            <div className="email-sent-banner">
-              <div className="email-sent-icon">📬</div>
-              <div>
-                <p className="email-sent-title">OTP Sent Successfully</p>
-                <p className="email-sent-desc">
-                  A 6-digit verification code has been dispatched to <strong>{email}</strong>. Please check your Inbox.
-                </p>
-              </div>
-            </div>
-
-            <label>
-              <span>6-Digit Verification Code (OTP)</span>
-              <input
-                type="text"
-                required
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                placeholder="e.g. 839201"
-                style={{ fontSize: 18, letterSpacing: 4, textAlign: 'center', fontWeight: 800 }}
-                autoFocus
-              />
-            </label>
-
-            <label>
-              <span>{t('new_password_label', 'New Password')}</span>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 8 characters with numbers"
-              />
-            </label>
-
-            <label>
-              <span>{t('confirm_password_label', 'Confirm New Password')}</span>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter new password"
-              />
-            </label>
-
-            {error && <p className="form-error">{error}</p>}
-
-            <div className="modal-actions-row">
-              <button
-                type="button"
-                className="outline-button"
-                onClick={() => {
-                  setStep('email')
-                  setError('')
-                }}
-                disabled={loading}
-              >
-                Back
-              </button>
-              <button className="primary-button flex-1" disabled={loading}>
-                {loading ? 'Updating Password...' : 'Reset & Save Password'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {step === 'success' && (
-          <div className="forgot-success-state">
-            <CheckCircle2 size={52} className="success-icon-green" />
-            <h3>Password Reset Complete!</h3>
-            <p>{successMsg}</p>
-            <button
-              type="button"
-              className="primary-button full"
-              onClick={() => onResetSuccess(email)}
-            >
-              Sign In With New Password <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   )
