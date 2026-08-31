@@ -12,11 +12,13 @@ import {
   KeyRound,
   LayoutDashboard,
   LogOut,
+  Mail,
   Map,
   Menu,
   Plus,
   Search,
   ShieldAlert,
+  Smartphone,
   Timer,
   Users,
   Wrench,
@@ -469,12 +471,31 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
 function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user: SessionUser) => void }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  
+  // Email Form State
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [forgotModalOpen, setForgotModalOpen] = useState(false)
+
+  // Phone OTP Form State
+  const [phone, setPhone] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [demoOtp, setDemoOtp] = useState('')
+  const [resendTimer, setResendTimer] = useState(0)
+
+  useEffect(() => {
+    let interval: any
+    if (resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000)
+    }
+    return () => clearInterval(interval)
+  }, [resendTimer])
+
   const [sessionExpiredNotice] = useState<string | null>(() => {
     const notice = sessionStorage.getItem('gantavya_session_expired')
     if (notice) {
@@ -521,7 +542,75 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
     setLoading(false)
   }
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+  // Handle Send Phone OTP
+  const handleSendPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    const cleanedDigits = phone.replace(/\D/g, '')
+    if (cleanedDigits.length < 10) {
+      setError('Please enter a valid 10-digit mobile number.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/api/auth/phone/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.detail || 'Could not send OTP. Please check the number.')
+      }
+
+      setOtpSent(true)
+      setDemoOtp(data.demo_otp || '')
+      setResendTimer(30)
+    } catch (err: any) {
+      setError(err.message || 'Failed to send OTP code.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle Verify Phone OTP
+  const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (otpCode.length < 4) {
+      setError('Please enter the full 6-digit OTP code.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/api/auth/phone/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          otp: otpCode.trim(),
+          full_name: fullName.trim() || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.detail || 'Invalid OTP code. Please check and retry.')
+      }
+
+      localStorage.setItem('civicpulse_token', data.access_token)
+      localStorage.setItem('civicpulse_user', JSON.stringify(data.user))
+      onAuth(data.user)
+      navigate(data.user.role === 'admin' ? '/admin' : data.user.role === 'worker' ? '/worker' : '/citizen')
+    } catch (err: any) {
+      setError(err.message || 'OTP verification failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const submitEmail = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setLoading(true)
     setError('')
@@ -599,6 +688,30 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
           </div>
         )}
 
+        {/* AUTH METHOD SWITCH TABS */}
+        <div className="auth-method-tabs">
+          <button
+            type="button"
+            className={`auth-tab-btn ${authMethod === 'phone' ? 'active' : ''}`}
+            onClick={() => {
+              setAuthMethod('phone')
+              setError('')
+            }}
+          >
+            <Smartphone size={16} /> Mobile OTP Login
+          </button>
+          <button
+            type="button"
+            className={`auth-tab-btn ${authMethod === 'email' ? 'active' : ''}`}
+            onClick={() => {
+              setAuthMethod('email')
+              setError('')
+            }}
+          >
+            <Mail size={16} /> Email & Password
+          </button>
+        </div>
+
         {mode === 'login' && (
           <div className="demo-accounts-box">
             <p className="demo-label">{t('quick_demo_access', 'Quick Demo Access')}</p>
@@ -630,60 +743,185 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
             </div>
           </div>
         )}
-        <form className="report-form" onSubmit={submit}>
-          {mode === 'register' && (
+
+        {/* PHONE OTP AUTH FLOW */}
+        {authMethod === 'phone' && (
+          <div className="phone-auth-container">
+            {!otpSent ? (
+              <form className="report-form" onSubmit={handleSendPhoneOtp}>
+                {mode === 'register' && (
+                  <label>
+                    {t('full_name_label', 'Full name')}
+                    <input
+                      name="full_name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      minLength={2}
+                      maxLength={100}
+                      placeholder="Your full name"
+                    />
+                  </label>
+                )}
+                <label>
+                  <span>Mobile Phone Number</span>
+                  <div className="phone-input-group">
+                    <span className="country-code-badge">🇮🇳 +91</span>
+                    <input
+                      type="tel"
+                      className="phone-number-field"
+                      value={phone}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+                        setPhone(digits)
+                      }}
+                      required
+                      placeholder="98765 43210"
+                      autoFocus
+                    />
+                  </div>
+                </label>
+
+                {error && <p className="form-error">{error}</p>}
+
+                <button className="primary-button full" disabled={loading || phone.length < 10}>
+                  {loading ? 'Sending OTP Code...' : '📲 Send Verification Code (OTP)'} <ChevronRight size={17} />
+                </button>
+              </form>
+            ) : (
+              <form className="report-form" onSubmit={handleVerifyPhoneOtp}>
+                <div className="otp-sent-banner">
+                  <CheckCircle2 size={18} color="#059669" />
+                  <div>
+                    <strong>OTP Dispatched via SMS</strong>
+                    <p>Enter the 6-digit code sent to +91 {phone}</p>
+                  </div>
+                </div>
+
+                <label>
+                  <span>6-Digit Verification Code</span>
+                  <input
+                    type="text"
+                    className="otp-code-input"
+                    value={otpCode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                      setOtpCode(val)
+                    }}
+                    required
+                    placeholder="• • • • • •"
+                    maxLength={6}
+                    autoFocus
+                  />
+                </label>
+
+                {demoOtp && (
+                  <div className="demo-otp-helper-card">
+                    <span>⚡ Generated Demo OTP: <strong>{demoOtp}</strong></span>
+                    <button
+                      type="button"
+                      className="auto-fill-otp-btn"
+                      onClick={() => setOtpCode(demoOtp)}
+                    >
+                      Auto-Fill Code
+                    </button>
+                  </div>
+                )}
+
+                {error && <p className="form-error">{error}</p>}
+
+                <button className="primary-button full" disabled={loading || otpCode.length < 6}>
+                  {loading ? 'Verifying OTP...' : '✅ Verify & Sign In'} <ChevronRight size={17} />
+                </button>
+
+                <div className="otp-resend-row">
+                  {resendTimer > 0 ? (
+                    <span className="resend-countdown">Resend OTP in {resendTimer}s</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="resend-link-btn"
+                      onClick={handleSendPhoneOtp}
+                      disabled={loading}
+                    >
+                      Resend SMS OTP
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="change-phone-link-btn"
+                    onClick={() => {
+                      setOtpSent(false)
+                      setOtpCode('')
+                      setError('')
+                    }}
+                  >
+                    Change Number
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* EMAIL & PASSWORD AUTH FLOW */}
+        {authMethod === 'email' && (
+          <form className="report-form" onSubmit={submitEmail}>
+            {mode === 'register' && (
+              <label>
+                {t('full_name_label', 'Full name')}
+                <input
+                  name="full_name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  minLength={2}
+                  maxLength={100}
+                  placeholder="Your name"
+                />
+              </label>
+            )}
             <label>
-              {t('full_name_label', 'Full name')}
+              {t('email_label', 'Email')}
               <input
-                name="full_name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                minLength={2}
-                maxLength={100}
-                placeholder="Your name"
+                placeholder="you@example.com"
               />
             </label>
-          )}
-          <label>
-            {t('email_label', 'Email')}
-            <input
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-            />
-          </label>
-          <label>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>{t('password_label', 'Password')}</span>
-              {mode === 'login' && (
-                <button
-                  type="button"
-                  className="forgot-password-link-btn"
-                  onClick={() => setForgotModalOpen(true)}
-                >
-                  {t('forgot_password_btn', 'Forgot password?')}
-                </button>
-              )}
-            </div>
-            <input
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              placeholder="At least 8 characters with numbers"
-            />
-          </label>
-          {error && <p className="form-error">{error}</p>}
-          <button className="primary-button full" disabled={loading}>
-            {loading ? t('connecting', 'Connecting...') : mode === 'login' ? t('sign_in_btn', 'Sign in') : t('create_acc_btn', 'Create account')} <ChevronRight size={17} />
-          </button>
-        </form>
+            <label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{t('password_label', 'Password')}</span>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    className="forgot-password-link-btn"
+                    onClick={() => setForgotModalOpen(true)}
+                  >
+                    {t('forgot_password_btn', 'Forgot password?')}
+                  </button>
+                )}
+              </div>
+              <input
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                placeholder="At least 8 characters with numbers"
+              />
+            </label>
+            {error && <p className="form-error">{error}</p>}
+            <button className="primary-button full" disabled={loading}>
+              {loading ? t('connecting', 'Connecting...') : mode === 'login' ? t('sign_in_btn', 'Sign in') : t('create_acc_btn', 'Create account')} <ChevronRight size={17} />
+            </button>
+          </form>
+        )}
+
         <p className="auth-switch">
           {mode === 'login' ? t('new_to_cp', 'New to Gantavya?') : t('already_have_acc', 'Already have an account?')}{' '}
           <Link to={mode === 'login' ? '/register' : '/'}>

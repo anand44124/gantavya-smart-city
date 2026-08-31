@@ -69,3 +69,11 @@ class ResetPasswordIn(BaseModel):
     @classmethod
     def clean_reset_email(cls, v: str) -> str:
         return v.strip().lower()
+
+class PhoneSendOtpIn(BaseModel):
+    phone: str = Field(min_length=10, max_length=20)
+
+class PhoneVerifyOtpIn(BaseModel):
+    phone: str = Field(min_length=10, max_length=20)
+    otp: str = Field(min_length=4, max_length=10)
+    full_name: str | None = None

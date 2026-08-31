@@ -10177,6 +10177,194 @@ select:focus, input:focus, textarea:focus {
   box-shadow: 0 10px 25px -2px rgba(2, 132, 199, 0.5);
 }
 
+/* ==========================================================================
+   PHONE OTP AUTHENTICATION STYLES
+   ========================================================================== */
+
+.auth-method-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 5px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+
+.auth-tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-tab-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.phone-auth-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ffffff;
+  transition: border-color 0.2s ease;
+}
+
+.phone-input-group:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.country-code-badge {
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-right: 1.5px solid #e2e8f0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+
+.phone-number-field {
+  flex: 1;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 12px 14px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+  color: #0f172a;
+}
+
+.otp-sent-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.otp-sent-banner strong {
+  display: block;
+  font-size: 13.5px;
+  color: #065f46;
+}
+
+.otp-sent-banner p {
+  font-size: 12px;
+  color: #047857;
+  margin: 2px 0 0;
+}
+
+.otp-code-input {
+  text-align: center;
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  letter-spacing: 12px !important;
+  color: #0f172a !important;
+  padding: 12px !important;
+  border: 2px solid #94a3b8 !important;
+  border-radius: 14px !important;
+  background: #f8fafc !important;
+}
+
+.otp-code-input:focus {
+  border-color: #0284c7 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2) !important;
+}
+
+.demo-otp-helper-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  color: #854d0e;
+}
+
+.auto-fill-otp-btn {
+  background: #f59e0b;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.auto-fill-otp-btn:hover {
+  background: #d97706;
+}
+
+.otp-resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12.5px;
+}
+
+.resend-countdown {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.resend-link-btn {
+  background: none;
+  border: none;
+  color: #0284c7;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.change-phone-link-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.change-phone-link-btn:hover {
+  color: #0f172a;
+}
+
+
 
 
 

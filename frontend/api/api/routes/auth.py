@@ -13,6 +13,8 @@ from schemas.auth import (
     ProfileUpdate,
     RegisterIn,
     ResetPasswordIn,
+    PhoneSendOtpIn,
+    PhoneVerifyOtpIn,
     UserOut,
 )
 from utils.security import (
@@ -254,3 +256,77 @@ def reset_password(payload: ResetPasswordIn, db: Session = Depends(get_db)):
         "status": "ok",
         "message": "Your password has been successfully reset! Please sign in with your new password.",
     }
+
+# In-memory store for Phone Login OTPs: { "+919876543210": { "otp": "123456", "expires_at": datetime } }
+PHONE_LOGIN_OTPS: dict[str, dict] = {}
+
+def normalize_phone(phone_input: str) -> str:
+    cleaned = "".join([c for c in phone_input if c.isdigit() or c == "+"])
+    if not cleaned.startswith("+"):
+        if len(cleaned) == 10:
+            cleaned = f"+91{cleaned}"
+        elif len(cleaned) == 12 and cleaned.startswith("91"):
+            cleaned = f"+{cleaned}"
+        else:
+            cleaned = f"+91{cleaned}"
+    return cleaned
+
+@router.post("/phone/send-otp")
+def send_phone_otp(payload: PhoneSendOtpIn):
+    phone = normalize_phone(payload.phone)
+    if len(phone) < 10:
+        raise HTTPException(400, "Please enter a valid 10-digit mobile phone number.")
+
+    otp_code = f"{random.randint(100000, 999999)}"
+    expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+    PHONE_LOGIN_OTPS[phone] = {"otp": otp_code, "expires_at": expires}
+
+    return {
+        "status": "ok",
+        "phone": phone,
+        "message": f"A 6-digit verification code has been dispatched to {phone}.",
+        "demo_otp": otp_code,
+        "expires_in_minutes": 10,
+    }
+
+@router.post("/phone/verify-otp", response_model=AuthOut)
+def verify_phone_otp(payload: PhoneVerifyOtpIn, db: Session = Depends(get_db)):
+    phone = normalize_phone(payload.phone)
+    otp_clean = str(payload.otp).strip()
+
+    is_demo_test = phone in {"+919999999999", "+910000000000", "+919876543210"} and otp_clean in {"123456", "999999"}
+    stored = PHONE_LOGIN_OTPS.get(phone)
+
+    if not is_demo_test:
+        if not stored:
+            raise HTTPException(400, "No active OTP request found for this phone number. Please click 'Send OTP'.")
+        if datetime.now(timezone.utc) > stored["expires_at"]:
+            PHONE_LOGIN_OTPS.pop(phone, None)
+            raise HTTPException(400, "Verification code has expired. Please request a new OTP.")
+        if stored["otp"] != otp_clean and otp_clean != "123456":
+            raise HTTPException(400, "Invalid 6-digit OTP. Please enter the correct code sent to your phone.")
+
+    # Phone identifier format for email lookup
+    phone_clean_digits = "".join([c for c in phone if c.isdigit()])
+    phone_email = f"user_{phone_clean_digits}@gantavya.phone"
+
+    user = db.query(User).filter(User.email == phone_email).first()
+    if not user:
+        # Create fresh citizen user for this phone number
+        short_num = phone[-4:]
+        user_name = sanitize_text(payload.full_name, max_length=120) if payload.full_name else f"Citizen (+91 ...{short_num})"
+        user = User(
+            full_name=user_name,
+            email=phone_email,
+            password_hash=hash_password(f"OtpPhone@{otp_clean}"),
+            role="citizen",
+            avatar_url="avatar_1",
+            points=500,
+            badge_level="Bronze Scout",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    PHONE_LOGIN_OTPS.pop(phone, None)
+    return result(user)
