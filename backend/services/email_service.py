@@ -13,9 +13,9 @@ load_dotenv(env_path)
 def get_smtp_config():
     server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
     port = int(os.getenv("SMTP_PORT", "587"))
-    user = (os.getenv("SMTP_USER") or os.getenv("GMAIL_USER") or "").strip()
-    pwd = (os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD") or "").replace(" ", "").strip()
-    from_name = os.getenv("SMTP_FROM_NAME", "Gantavya Smart City Portal")
+    user = (os.getenv("SMTP_USER") or os.getenv("GMAIL_USER") or "gantavya2406@gmail.com").strip()
+    pwd = (os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD") or "cjlfaokjmynwwaxb").replace(" ", "").strip()
+    from_name = os.getenv("SMTP_FROM_NAME", "Gantavya (गंतव्य) Smart City Portal")
     return server, port, user, pwd, from_name
 
 
