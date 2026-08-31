@@ -24,7 +24,8 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import './App.css'
+import confetti from 'canvas-confetti'
+import { ModernOtpInput } from './components/ModernOtpInput'
 import RealReportForm from './components/RealReportForm'
 import LiveCitizenHome from './components/LiveCitizenHome'
 import LiveReportList from './components/LiveReportList'
@@ -543,8 +544,8 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
   }
 
   // Handle Send Phone OTP
-  const handleSendPhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSendPhoneOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setError('')
     const cleanedDigits = phone.replace(/\D/g, '')
     if (cleanedDigits.length < 10) {
@@ -575,10 +576,10 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
   }
 
   // Handle Verify Phone OTP
-  const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleVerifyPhoneOtp = async (codeToVerify?: string) => {
     setError('')
-    if (otpCode.length < 4) {
+    const code = codeToVerify || otpCode
+    if (code.length < 4) {
       setError('Please enter the full 6-digit OTP code.')
       return
     }
@@ -590,7 +591,7 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone,
-          otp: otpCode.trim(),
+          otp: code.trim(),
           full_name: fullName.trim() || undefined,
         }),
       })
@@ -598,6 +599,11 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
       if (!res.ok) {
         throw new Error(data.detail || 'Invalid OTP code. Please check and retry.')
       }
+
+      // Confetti celebration
+      try {
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } })
+      } catch {}
 
       localStorage.setItem('civicpulse_token', data.access_token)
       localStorage.setItem('civicpulse_user', JSON.stringify(data.user))
@@ -789,77 +795,20 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
                 </button>
               </form>
             ) : (
-              <form className="report-form" onSubmit={handleVerifyPhoneOtp}>
-                <div className="otp-sent-banner">
-                  <CheckCircle2 size={18} color="#059669" />
-                  <div>
-                    <strong>OTP Dispatched via SMS</strong>
-                    <p>Enter the 6-digit code sent to +91 {phone}</p>
-                  </div>
-                </div>
-
-                <label>
-                  <span>6-Digit Verification Code</span>
-                  <input
-                    type="text"
-                    className="otp-code-input"
-                    value={otpCode}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 6)
-                      setOtpCode(val)
-                    }}
-                    required
-                    placeholder="• • • • • •"
-                    maxLength={6}
-                    autoFocus
-                  />
-                </label>
-
-                {demoOtp && (
-                  <div className="demo-otp-helper-card">
-                    <span>⚡ Generated Demo OTP: <strong>{demoOtp}</strong></span>
-                    <button
-                      type="button"
-                      className="auto-fill-otp-btn"
-                      onClick={() => setOtpCode(demoOtp)}
-                    >
-                      Auto-Fill Code
-                    </button>
-                  </div>
-                )}
-
-                {error && <p className="form-error">{error}</p>}
-
-                <button className="primary-button full" disabled={loading || otpCode.length < 6}>
-                  {loading ? 'Verifying OTP...' : '✅ Verify & Sign In'} <ChevronRight size={17} />
-                </button>
-
-                <div className="otp-resend-row">
-                  {resendTimer > 0 ? (
-                    <span className="resend-countdown">Resend OTP in {resendTimer}s</span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="resend-link-btn"
-                      onClick={handleSendPhoneOtp}
-                      disabled={loading}
-                    >
-                      Resend SMS OTP
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="change-phone-link-btn"
-                    onClick={() => {
-                      setOtpSent(false)
-                      setOtpCode('')
-                      setError('')
-                    }}
-                  >
-                    Change Number
-                  </button>
-                </div>
-              </form>
+              <ModernOtpInput
+                phone={phone}
+                loading={loading}
+                error={error}
+                demoOtp={demoOtp}
+                resendTimer={resendTimer}
+                onVerify={(code) => handleVerifyPhoneOtp(code)}
+                onResend={handleSendPhoneOtp}
+                onChangeNumber={() => {
+                  setOtpSent(false)
+                  setOtpCode('')
+                  setError('')
+                }}
+              />
             )}
           </div>
         )}
