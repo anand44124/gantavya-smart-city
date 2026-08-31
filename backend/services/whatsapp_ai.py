@@ -47,7 +47,9 @@ def clear_session(phone: str):
     if phone in _sessions:
         del _sessions[phone]
 
-def get_whatsapp_client() -> genai.Client | None:
+def get_whatsapp_client():
+    if not genai:
+        return None
     try:
         return genai.Client(api_key=WHATSAPP_KEY)
     except Exception as e:
