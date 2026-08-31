@@ -26,6 +26,7 @@ import { useTranslation } from '../i18n/LanguageContext'
 import { LANGUAGES, type LanguageCode } from '../i18n/translations'
 import { UserAvatar } from './UserAvatar'
 import { AvatarPickerModal } from './AvatarPickerModal'
+import { CivicCertificateModal } from './CivicCertificateModal'
 
 type User = {
   id: number
@@ -53,6 +54,9 @@ export default function LiveProfile() {
 
   // Avatar Picker Modal State
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
+
+  // Certificate Modal State
+  const [certModalOpen, setCertModalOpen] = useState(false)
 
   // Delete Account Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -232,6 +236,27 @@ export default function LiveProfile() {
         </div>
 
         <div className="profile-hero-stats">
+          <button
+            type="button"
+            className="download-cert-pill-btn"
+            onClick={() => setCertModalOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 18px',
+              background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: 13,
+              borderRadius: 9999,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
+            }}
+          >
+            <Award size={18} /> 📜 Download Official Civic Certificate
+          </button>
           <button
             type="button"
             className="change-avatar-pill-btn"
@@ -540,6 +565,12 @@ export default function LiveProfile() {
             </div>
           </div>
         </div>
+      )}
+      {certModalOpen && user && (
+        <CivicCertificateModal
+          user={{ ...user, points: currentPoints, badge_level: badgeLevel }}
+          onClose={() => setCertModalOpen(false)}
+        />
       )}
     </div>
   )
