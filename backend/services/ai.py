@@ -1,6 +1,7 @@
 import io
 import json
 import re
+import time
 import base64
 import asyncio
 import requests
@@ -110,13 +111,13 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image) -> dict[str, object]:
         }
     }
 
-    models_to_try = [settings.ai_model, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash"]
+    models_to_try = [settings.ai_model, "gemini-1.5-flash"]
 
     for model_name in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-        for attempt in range(2):
+        for attempt in range(1):
             try:
-                resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(3, 8))
+                resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(2, 4))
                 if resp.status_code == 200:
                     candidates = resp.json().get("candidates", [])
                     if candidates:
