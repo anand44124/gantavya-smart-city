@@ -3,115 +3,94 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Tuple
-from pathlib import Path
-from dotenv import load_dotenv
 
-# Load .env file explicitly
-env_path = Path(__file__).resolve().parent.parent / ".env"
-load_dotenv(env_path)
-
-def get_smtp_config():
-    server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-    port = int(os.getenv("SMTP_PORT", "587"))
-    user = (os.getenv("SMTP_USER") or os.getenv("GMAIL_USER") or "gantavya2406@gmail.com").strip()
-    pwd = (os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD") or "cjlfaokjmynwwaxb").replace(" ", "").strip()
-    from_name = os.getenv("SMTP_FROM_NAME", "Gantavya (गंतव्य) Smart City Portal")
-    return server, port, user, pwd, from_name
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_USER = "gantavya2406@gmail.com"
+SMTP_PASS = "cjlfaokjmynwwaxb"
+SMTP_FROM_NAME = "Gantavya (गंतव्य) Smart City"
 
 
 def send_otp_email(to_email: str, otp_code: str, user_name: str = "Citizen") -> Tuple[bool, str]:
     """
-    Sends a real-time OTP verification email to the user's Gmail / email address.
-    If SMTP credentials are provided, it delivers a rich HTML email via Gmail SMTP.
-    If no SMTP credentials are configured yet, it logs the dispatch and returns simulated delivery.
+    Delivers a real 6-digit verification code to the recipient's Gmail inbox.
+    Uses direct SSL 465 with fallback to TLS 587.
     """
     subject = f"🔐 Your Gantavya Password Reset Code: {otp_code}"
-    
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; }}
-        .email-container {{ max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 18px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }}
-        .header {{ background: linear-gradient(135deg, #0d9488, #10b981); padding: 28px 24px; text-align: center; color: #ffffff; }}
-        .header h1 {{ margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }}
-        .header p {{ margin: 6px 0 0; opacity: 0.9; font-size: 13px; }}
-        .body {{ padding: 30px 24px; color: #1e293b; }}
-        .greeting {{ font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }}
-        .text {{ font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 24px; }}
-        .otp-box {{ background: #f0fdf4; border: 2px dashed #0d9488; border-radius: 14px; padding: 18px; text-align: center; margin: 20px 0; }}
-        .otp-label {{ font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0d9488; letter-spacing: 1px; margin-bottom: 4px; }}
-        .otp-code {{ font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #0f172a; margin: 6px 0; }}
-        .otp-expiry {{ font-size: 12px; color: #64748b; margin-top: 4px; }}
-        .footer {{ background: #f8fafc; padding: 18px 24px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }}
-      </style>
-    </head>
-    <body>
-      <div class="email-container">
-        <div class="header">
-          <h1>गंतव्य (Gantavya)</h1>
-          <p>Smart City Governance & Citizen Mobility Platform</p>
-        </div>
-        <div class="body">
-          <div class="greeting">Hello {user_name},</div>
-          <div class="text">
-            We received a request to reset the password for your <strong>Gantavya Citizen Account</strong> ({to_email}). Use the 6-digit verification code below to complete your password update.
-          </div>
-          <div class="otp-box">
-            <div class="otp-label">Verification OTP Code</div>
-            <div class="otp-code">{otp_code}</div>
-            <div class="otp-expiry">⏳ Valid for 10 minutes only. Do not share this code with anyone.</div>
-          </div>
-          <div class="text" style="font-size: 12.5px; color: #64748b;">
-            If you did not request this password reset, please ignore this email or reach out to municipal support.
-          </div>
-        </div>
-        <div class="footer">
-          &copy; Gantavya Smart City Grid &middot; Secure Civic Infrastructure Network
-        </div>
-      </div>
-    </body>
-    </html>
-    """
 
-    server_host, server_port, smtp_user, smtp_pass, from_name = get_smtp_config()
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width: 500px; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06);" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="background: linear-gradient(135deg, #0d9488 0%, #10b981 100%); padding: 28px 24px; text-align: center;">
+              <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">गंतव्य (Gantavya)</h1>
+              <p style="margin: 6px 0 0; color: #e6fffa; font-size: 13px;">Smart City Governance & Citizen Mobility Platform</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 24px;">
+              <p style="margin: 0 0 12px; font-size: 16px; font-weight: 700; color: #0f172a;">Hello {user_name},</p>
+              <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #475569;">
+                We received a request to reset the password for your <strong>Gantavya Citizen Account</strong> (<strong>{to_email}</strong>). Use the verification code below to proceed:
+              </p>
+              <div style="background: #f0fdf4; border: 2px dashed #0d9488; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
+                <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0d9488; letter-spacing: 1.5px; margin-bottom: 6px;">Verification OTP Code</div>
+                <div style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 900; letter-spacing: 8px; color: #0f172a; margin: 4px 0;">{otp_code}</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 6px;">⏳ Valid for 10 minutes only. Do not share this code.</div>
+              </div>
+              <p style="margin: 20px 0 0; font-size: 13px; line-height: 1.5; color: #64748b;">
+                If you did not request a password reset, you can safely ignore this email. Your account remains secure.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background: #f8fafc; padding: 18px 24px; text-align: center; border-top: 1px solid #f1f5f9;">
+              <p style="margin: 0; font-size: 12px; color: #94a3b8;">&copy; 2026 Gantavya Smart City Portal &middot; Ministry of Housing & Urban Affairs</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
 
-    if not smtp_user or not smtp_pass:
-        # Development / Fallback mode
-        print(f"\n[Gantavya Real-Time Email Dispatcher] >>> SENT OTP {otp_code} to {to_email} (Simulated Dispatch) <<<\n")
-        return True, "Email dispatched (Simulated / Local mode)"
+    plain_text = f"Your Gantavya Password Reset Code is: {otp_code} (Valid for 10 minutes). Do not share this code."
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🔐 Your Gantavya Verification Code: {otp_code}"
-        msg["From"] = f"{from_name} <{smtp_user}>"
+        msg["Subject"] = subject
+        msg["From"] = f"{SMTP_FROM_NAME} <{SMTP_USER}>"
         msg["To"] = to_email
         msg["X-Priority"] = "1"
         msg["Priority"] = "Urgent"
         msg["Importance"] = "high"
 
-        part_html = MIMEText(html_content, "html")
-        part_text = MIMEText(f"Your Gantavya Password Reset Code is: {otp_code} (Valid for 10 mins).", "plain")
+        msg.attach(MIMEText(plain_text, "plain"))
+        msg.attach(MIMEText(html_content, "html"))
 
-        msg.attach(part_text)
-        msg.attach(part_html)
-
-        # Primary: Direct SSL 465 (Fastest on cloud serverless)
+        # Try Port 465 SSL first
         try:
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=6) as server:
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, [to_email], msg.as_string())
-        except Exception as ssl_err:
-            print(f"[Gantavya Email Service] SSL 465 notice, trying 587: {ssl_err}")
-            with smtplib.SMTP("smtp.gmail.com", 587, timeout=6) as server:
+            with smtplib.SMTP_SSL(SMTP_SERVER, 465, timeout=10) as server:
+                server.login(SMTP_USER, SMTP_PASS)
+                server.sendmail(SMTP_USER, [to_email], msg.as_string())
+            print(f"[Gantavya Email] 🚀 Dispatched via SSL 465 to {to_email}")
+            return True, f"OTP sent to {to_email}"
+        except Exception as e465:
+            print(f"[Gantavya Email] 465 failed ({e465}), trying 587 STARTTLS...")
+            with smtplib.SMTP(SMTP_SERVER, 587, timeout=10) as server:
                 server.starttls()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, [to_email], msg.as_string())
-
-        print(f"[Gantavya Email Service] 🚀 Real-time email successfully delivered to {to_email}")
-        return True, f"Verification OTP successfully sent to {to_email}"
-    except Exception as e:
-        print(f"[Gantavya Email Service] SMTP Dispatch Notice: {e}")
-        return False, f"SMTP delivery error: {str(e)}"
+                server.login(SMTP_USER, SMTP_PASS)
+                server.sendmail(SMTP_USER, [to_email], msg.as_string())
+            print(f"[Gantavya Email] 🚀 Dispatched via TLS 587 to {to_email}")
+            return True, f"OTP sent to {to_email}"
+    except Exception as err:
+        print(f"[Gantavya Email ERROR] {err}")
+        return False, str(err)

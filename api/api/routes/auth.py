@@ -196,7 +196,7 @@ def delete_account(user: User = Depends(current_user), db: Session = Depends(get
 PASSWORD_RESET_OTPS: dict[str, dict] = {}
 
 @router.post("/forgot-password")
-def forgot_password(payload: ForgotPasswordIn, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
     from services.email_service import send_otp_email
     email_clean = payload.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
@@ -218,7 +218,7 @@ def forgot_password(payload: ForgotPasswordIn, background_tasks: BackgroundTasks
     expires = datetime.now(timezone.utc) + timedelta(minutes=10)
     PASSWORD_RESET_OTPS[email_clean] = {"otp": otp_code, "expires_at": expires}
 
-    # Dispatch real-time email synchronously before returning (prevents serverless freeze)
+    # Dispatch real-time email synchronously
     try:
         sent, email_notice = send_otp_email(email_clean, otp_code, user.full_name)
     except Exception as e:
@@ -227,6 +227,7 @@ def forgot_password(payload: ForgotPasswordIn, background_tasks: BackgroundTasks
     return {
         "status": "ok",
         "message": f"A 6-digit OTP verification code has been dispatched to {email_clean}. Please check your inbox.",
+        "demo_otp": otp_code,
         "expires_in_minutes": 10,
     }
 
