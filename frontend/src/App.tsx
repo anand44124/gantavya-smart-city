@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import './App.css'
 import { ModernOtpInput } from './components/ModernOtpInput'
 import RealReportForm from './components/RealReportForm'
 import LiveCitizenHome from './components/LiveCitizenHome'
