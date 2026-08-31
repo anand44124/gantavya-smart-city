@@ -11283,3 +11283,43 @@ select:focus, input:focus, textarea:focus {
   letter-spacing: 0.5px;
   font-family: system-ui, sans-serif;
 }
+
+/* DYNAMIC NAME EDIT BAR & EXACT SIGNATURE ASSETS */
+.cert-name-edit-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+.cert-name-input-bar {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  width: 170px;
+}
+
+.cert-name-input-bar::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.cert-real-sig-img {
+  height: 52px;
+  max-width: 150px;
+  object-fit: contain;
+  filter: contrast(1.1);
+  mix-blend-mode: multiply;
+}
+
+.cert-monument-seal-img {
+  width: 95px;
+  height: 95px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(180, 83, 9, 0.25));
+}

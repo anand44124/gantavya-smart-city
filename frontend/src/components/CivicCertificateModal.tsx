@@ -1,4 +1,5 @@
-import { Award, Printer, ShieldCheck, X } from 'lucide-react'
+import { useState } from 'react'
+import { Award, Edit3, Printer, ShieldCheck, X } from 'lucide-react'
 
 type User = {
   full_name: string
@@ -13,14 +14,11 @@ interface CivicCertificateModalProps {
 }
 
 export function CivicCertificateModal({ user, onClose }: CivicCertificateModalProps) {
-  const points = user.points ?? 50000
+  const [recipientName, setRecipientName] = useState(user.full_name || 'Demo Citizen 1')
+  const points = user.points ?? 49150
   const badgeLevel = user.badge_level ?? 'Diamond Reformer'
   const certId = `GAN-2026-HONOR-${(user.full_name.length * 77 + points).toString().slice(0, 5)}`
-  const dateStr = new Date().toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const dateStr = '31 August 2026'
 
   const handlePrint = () => {
     window.print()
@@ -38,6 +36,20 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
               <p>Printable & Verified Government Certificate of Excellence</p>
             </div>
           </div>
+          
+          {/* INLINE NAME CHANGER */}
+          <div className="cert-name-edit-field">
+            <Edit3 size={15} color="#059669" />
+            <input
+              type="text"
+              value={recipientName}
+              onChange={(e) => setRecipientName(e.target.value)}
+              placeholder="Edit Recipient Name..."
+              className="cert-name-input-bar"
+              title="Type any name to update certificate dynamically"
+            />
+          </div>
+
           <div className="cert-action-btns">
             <button type="button" className="print-cert-btn" onClick={handlePrint}>
               <Printer size={16} /> Print / Save as PDF
@@ -67,10 +79,6 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 <div className="cert-authority-title">
                   <h4>MUNICIPAL CORPORATION & SMART CITY GOVERNANCE AUTHORITY</h4>
                   <h5>NATIONAL CIVIC EXCELLENCE & HONOUR COMMITTEE</h5>
-                  <div className="cert-national-initiatives">
-                    <span className="initiative-tag sbm">🧹 SWACHH BHARAT MISSION</span>
-                    <span className="initiative-tag di">🇮🇳 DIGITAL INDIA</span>
-                  </div>
                 </div>
                 <div className="cert-emblem-badge">
                   <ShieldCheck size={36} color="#059669" />
@@ -85,9 +93,17 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 <p className="cert-subheading">THIS CERTIFICATE IS PROUDLY PRESENTED TO</p>
               </div>
 
-              {/* RECIPIENT NAME */}
+              {/* RECIPIENT NAME (DYNAMIC & EDITABLE) */}
               <div className="cert-recipient-box">
-                <h2 className="cert-user-name">{user.full_name}</h2>
+                <h2 
+                  className="cert-user-name" 
+                  contentEditable 
+                  suppressContentEditableWarning
+                  onBlur={(e) => setRecipientName(e.currentTarget.textContent || recipientName)}
+                  title="Click to directly edit name"
+                >
+                  {recipientName}
+                </h2>
                 <div className="cert-underline-gold" />
               </div>
 
@@ -115,10 +131,12 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 </div>
               </div>
 
-              {/* FOOTER SIGNATURES & OFFICIAL SEALS */}
+              {/* FOOTER SIGNATURES & OFFICIAL SEALS (EXACT CUSTOM ASSETS) */}
               <div className="cert-footer-signatures">
                 <div className="cert-signature-col">
-                  <div className="cert-calligraphy-sig">Dr. S. K. Verma</div>
+                  <div className="cert-signature-img-space">
+                    <img src="/sig_dr_verma.png" alt="Signature Dr. S. K. Verma" className="cert-real-sig-img" />
+                  </div>
                   <div className="signature-line" />
                   <strong>Dr. S. K. Verma</strong>
                   <span>Municipal Commissioner</span>
@@ -126,15 +144,13 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 </div>
 
                 <div className="cert-seal-center">
-                  <div className="cert-gold-crest-seal">
-                    <img src="/gantavya-icon-celtic-emerald.png" alt="Seal Emblem" className="cert-crest-icon" />
-                    <span className="cert-crest-txt">OFFICIAL SEAL</span>
-                    <small className="cert-crest-sub">GOVERNMENT OF INDIA</small>
-                  </div>
+                  <img src="/cert_center_seal_2026.png" alt="Gantavya Smart City 2026 Seal" className="cert-monument-seal-img" />
                 </div>
 
                 <div className="cert-signature-col">
-                  <div className="cert-calligraphy-sig alt-sig">Arjun Sharma</div>
+                  <div className="cert-signature-img-space">
+                    <img src="/sig_arjun_sharma.png" alt="Signature Arjun Sharma" className="cert-real-sig-img" />
+                  </div>
                   <div className="signature-line" />
                   <strong>Arjun Sharma</strong>
                   <span>Chief Governance Officer</span>
@@ -144,8 +160,8 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
 
               {/* FOOTER DISCLOSURE & DATE */}
               <div className="cert-footer-meta">
-                <span>Date of Issue: <strong>{dateStr}</strong></span>
-                <span>Verification: <strong>gantavya-portal.vercel.app/verify/{certId}</strong></span>
+                <span>Date of issue: <strong>{dateStr}</strong></span>
+                <span>portal.vercel.app/verify/<strong>{certId}</strong></span>
               </div>
             </div>
           </div>
