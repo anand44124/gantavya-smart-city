@@ -15,7 +15,7 @@ interface ModernOtpInputProps {
 
 export const ModernOtpInput: React.FC<ModernOtpInputProps> = ({
   phone,
-  length = 4,
+  length = 6,
   loading,
   error,
   demoOtp,
@@ -110,7 +110,10 @@ export const ModernOtpInput: React.FC<ModernOtpInputProps> = ({
   const fullOtp = digits.join('')
   const isComplete = fullOtp.length === length && !digits.includes('')
 
-  const slotPositions = ['top', 'right', 'bottom', 'left']
+  const slotPositions =
+    length === 6
+      ? ['top', 'top-right', 'bottom-right', 'bottom', 'bottom-left', 'top-left']
+      : ['top', 'right', 'bottom', 'left']
 
   return (
     <div className="orbit-otp-light-card">
@@ -121,7 +124,7 @@ export const ModernOtpInput: React.FC<ModernOtpInputProps> = ({
       <div className="orbit-header-content">
         <h2 className="orbit-title">Verify your number</h2>
         <p className="orbit-subtitle">
-          Enter the 4-digit code we sent to <span className="orbit-phone-tag">{maskedPhone()}</span>
+          Enter the {length}-digit code sent to <span className="orbit-phone-tag">{maskedPhone()}</span>
         </p>
         <button type="button" className="orbit-edit-btn" onClick={onChangeNumber}>
           <Edit3 size={13} /> Change Number

@@ -10547,6 +10547,26 @@ select:focus, input:focus, textarea:focus {
   left: 4px;
 }
 
+.orbit-satellite-slot.pos-top-right {
+  top: 34px;
+  right: 10px;
+}
+
+.orbit-satellite-slot.pos-bottom-right {
+  bottom: 34px;
+  right: 10px;
+}
+
+.orbit-satellite-slot.pos-bottom-left {
+  bottom: 34px;
+  left: 10px;
+}
+
+.orbit-satellite-slot.pos-top-left {
+  top: 34px;
+  left: 10px;
+}
+
 .orbit-satellite-slot:focus-within {
   border-color: #0284c7;
   transform: scale(1.1);
