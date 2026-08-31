@@ -114,10 +114,8 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
               {/* FOOTER SIGNATURES & OFFICIAL SEALS */}
               <div className="cert-footer-signatures">
                 <div className="cert-signature-col">
-                  {/* Space reserved for image signature */}
-                  <div className="cert-signature-img-space">
-                    <img src="/sig1.png" alt="Signature 1" className="cert-sig-img" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                  </div>
+                  {/* Clean blank space for real signature */}
+                  <div className="cert-signature-img-space" />
                   <div className="signature-line" />
                   <strong>Dr. S. K. Verma</strong>
                   <span>Municipal Commissioner</span>
@@ -133,10 +131,8 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 </div>
 
                 <div className="cert-signature-col">
-                  {/* Space reserved for image signature */}
-                  <div className="cert-signature-img-space">
-                    <img src="/sig2.png" alt="Signature 2" className="cert-sig-img" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                  </div>
+                  {/* Clean blank space for real signature */}
+                  <div className="cert-signature-img-space" />
                   <div className="signature-line" />
                   <strong>Arjun Sharma</strong>
                   <span>Chief Governance Officer</span>
