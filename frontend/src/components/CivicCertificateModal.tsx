@@ -127,25 +127,10 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 </div>
 
                 <div className="cert-seal-center">
-                  <div className="cert-national-ashoka-seal">
-                    <svg className="ashoka-chakra-svg" viewBox="0 0 100 100" width="44" height="44">
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d97706" strokeWidth="4" />
-                      <circle cx="50" cy="50" r="38" fill="#0f172a" stroke="#d97706" strokeWidth="1.5" />
-                      <circle cx="50" cy="50" r="10" fill="#d97706" />
-                      {Array.from({ length: 24 }).map((_, i) => (
-                        <line
-                          key={i}
-                          x1="50"
-                          y1="50"
-                          x2={50 + 38 * Math.cos((i * 15 * Math.PI) / 180)}
-                          y2={50 + 38 * Math.sin((i * 15 * Math.PI) / 180)}
-                          stroke="#d97706"
-                          strokeWidth="1.5"
-                        />
-                      ))}
-                    </svg>
-                    <span className="ashoka-seal-text">सत्यमेव जयते</span>
-                    <small className="ashoka-seal-sub">GOVT OF INDIA</small>
+                  <div className="cert-gold-crest-seal">
+                    <img src="/gantavya-icon-celtic-emerald.png" alt="Seal Emblem" className="cert-crest-icon" />
+                    <span className="cert-crest-txt">OFFICIAL SEAL</span>
+                    <small className="cert-crest-sub">GOVERNMENT OF INDIA</small>
                   </div>
                 </div>
 

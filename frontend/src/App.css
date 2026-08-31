@@ -11245,3 +11245,41 @@ select:focus, input:focus, textarea:focus {
   color: #0284c7;
   border: 1px solid rgba(2, 132, 199, 0.25);
 }
+
+/* PURE GOLD CREST SEAL STYLING */
+.cert-gold-crest-seal {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%);
+  border: 2px solid #d97706;
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+}
+
+.cert-crest-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.cert-crest-txt {
+  font-size: 8px;
+  font-weight: 900;
+  color: #b45309;
+  letter-spacing: 1px;
+  margin-top: 3px;
+  font-family: system-ui, sans-serif;
+}
+
+.cert-crest-sub {
+  font-size: 7px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.5px;
+  font-family: system-ui, sans-serif;
+}
