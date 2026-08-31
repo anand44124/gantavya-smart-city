@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Dancing+Script:wght@700&family=Great+Vibes&display=swap');
+
 :root {
   color-scheme: only light !important;
   forced-color-adjust: none !important;
@@ -11149,4 +11151,23 @@ select:focus, input:focus, textarea:focus {
   .certificate-paper-frame {
     padding: 10px;
   }
+}
+
+/* CALLIGRAPHY SIGNATURE STYLING FOR OFFICIAL CERTIFICATE */
+
+.cert-calligraphy-sig {
+  font-family: 'Great Vibes', 'Dancing Script', 'Alex Brush', cursive;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: -10px;
+  transform: rotate(-4deg);
+  user-select: none;
+}
+
+.cert-calligraphy-sig.alt-sig {
+  font-family: 'Alex Brush', 'Dancing Script', cursive;
+  font-size: 30px;
+  color: #065f46;
+  transform: rotate(-2deg);
 }
