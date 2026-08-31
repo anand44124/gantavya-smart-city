@@ -28,7 +28,7 @@ from utils.security import (
 router = APIRouter()
 
 DEMO_ACCOUNTS = {
-    "admin": ("CivicPulse Admin", "admin@civicpulse.demo", "Admin@123", "admin", "avatar_3"),
+    "admin": ("Gantavya Admin", "admin@civicpulse.demo", "Admin@123", "admin", "avatar_3"),
     "worker": ("Arjun Kumar", "worker1@civicpulse.demo", "Worker@123", "worker", "avatar_4"),
     "citizen": ("Demo Citizen 1", "citizen1@civicpulse.demo", "Citizen@123", "citizen", "avatar_1"),
 }
