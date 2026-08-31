@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import './App.css'
+import { auth, RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from './firebase'
 import { ModernOtpInput } from './components/ModernOtpInput'
 import RealReportForm from './components/RealReportForm'
 import LiveCitizenHome from './components/LiveCitizenHome'
@@ -489,6 +490,8 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
   const [otpSent, setOtpSent] = useState(false)
   const [demoOtp, setDemoOtp] = useState('')
   const [resendTimer, setResendTimer] = useState(0)
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null)
 
   useEffect(() => {
     let interval: any
@@ -556,10 +559,27 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
 
     setLoading(true)
     try {
+      // 1. Try Firebase Real SMS OTP Dispatch
+      if (auth) {
+        try {
+          if (!recaptchaVerifierRef.current) {
+            recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+              size: 'invisible',
+            })
+          }
+          const formattedPhone = cleanedDigits.length === 10 ? `+91${cleanedDigits}` : `+${cleanedDigits}`
+          const confirmation = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifierRef.current)
+          setConfirmationResult(confirmation)
+        } catch (firebaseErr: any) {
+          console.warn('Firebase SMS dispatch fallback / note:', firebaseErr)
+        }
+      }
+
+      // 2. Also register on backend & get fallback demo code
       const res = await fetch(`${API_URL}/api/auth/phone/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: cleanedDigits }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -581,12 +601,22 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
     setError('')
     const code = codeToVerify || otpCode
     if (code.length < 4) {
-      setError('Please enter the full 6-digit OTP code.')
+      setError('Please enter the full 4-digit OTP code.')
       return
     }
 
     setLoading(true)
     try {
+      // 1. If Firebase sent SMS, verify with Firebase
+      if (confirmationResult) {
+        try {
+          await confirmationResult.confirm(code.trim())
+        } catch (fbErr: any) {
+          console.warn('Firebase confirm fallback:', fbErr)
+        }
+      }
+
+      // 2. Sync user in Neon PostgreSQL DB & get JWT session
       const res = await fetch(`${API_URL}/api/auth/phone/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -754,6 +784,7 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
         {/* PHONE OTP AUTH FLOW */}
         {authMethod === 'phone' && (
           <div className="phone-auth-container">
+            <div id="recaptcha-container"></div>
             {!otpSent ? (
               <form className="report-form" onSubmit={handleSendPhoneOtp}>
                 {mode === 'register' && (

@@ -1,21 +1,19 @@
 import { initializeApp, getApps } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth'
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+export const firebaseConfig = {
+  apiKey: "AIzaSyDcILq2RZt_59TrgjWucIDvGqOKXIY_2KI",
+  authDomain: "gantavya-app.firebaseapp.com",
+  projectId: "gantavya-app",
+  storageBucket: "gantavya-app.firebasestorage.app",
+  messagingSenderId: "406886206847",
+  appId: "1:406886206847:web:ccc753f5235b2c14a4de4a",
+  measurementId: "G-X14FJYHPBW",
 }
 
-export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)
+export const isFirebaseConfigured = true
 
-export const app = isFirebaseConfigured
-  ? getApps().length === 0
-    ? initializeApp(firebaseConfig)
-    : getApps()[0]
-  : null
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+export const auth = getAuth(app)
 
-export const auth = app ? getAuth(app) : null
+export { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult }
