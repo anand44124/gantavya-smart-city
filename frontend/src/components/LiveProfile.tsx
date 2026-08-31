@@ -236,27 +236,48 @@ export default function LiveProfile() {
         </div>
 
         <div className="profile-hero-stats">
-          <button
-            type="button"
-            className="download-cert-pill-btn"
-            onClick={() => setCertModalOpen(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '10px 18px',
-              background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-              color: '#ffffff',
-              fontWeight: 800,
-              fontSize: 13,
-              borderRadius: 9999,
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
-            }}
-          >
-            <Award size={18} /> 📜 Download Official Civic Certificate
-          </button>
+          {currentPoints >= 500 ? (
+            <button
+              type="button"
+              className="download-cert-pill-btn"
+              onClick={() => setCertModalOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 18px',
+                background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                color: '#ffffff',
+                fontWeight: 800,
+                fontSize: 13,
+                borderRadius: 9999,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
+              }}
+            >
+              <Award size={18} /> 📜 Download Official Civic Certificate
+            </button>
+          ) : (
+            <div
+              className="cert-locked-pill"
+              title="Report 1 civic issue or earn 500 points to unlock your official certificate!"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '10px 16px',
+                background: 'rgba(241, 245, 249, 0.8)',
+                color: '#64748b',
+                fontWeight: 700,
+                fontSize: 12,
+                borderRadius: 9999,
+                border: '1px solid #cbd5e1',
+              }}
+            >
+              🔒 Earn 500 PTS to Unlock Certificate ({currentPoints}/500)
+            </div>
+          )}
           <button
             type="button"
             className="change-avatar-pill-btn"
