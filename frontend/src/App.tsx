@@ -12,13 +12,11 @@ import {
   KeyRound,
   LayoutDashboard,
   LogOut,
-  Mail,
   Map,
   Menu,
   Plus,
   Search,
   ShieldAlert,
-  Smartphone,
   Timer,
   Users,
   Wrench,
@@ -26,7 +24,6 @@ import {
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import './App.css'
-import { ModernOtpInput } from './components/ModernOtpInput'
 import RealReportForm from './components/RealReportForm'
 import LiveCitizenHome from './components/LiveCitizenHome'
 import LiveReportList from './components/LiveReportList'
@@ -473,7 +470,6 @@ function Platform({ user, logout }: { user: SessionUser; logout: () => void }) {
 function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user: SessionUser) => void }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   
@@ -482,21 +478,6 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [forgotModalOpen, setForgotModalOpen] = useState(false)
-
-  // Phone OTP Form State
-  const [phone, setPhone] = useState('')
-  const [otpCode, setOtpCode] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
-  const [demoOtp, setDemoOtp] = useState('')
-  const [resendTimer, setResendTimer] = useState(0)
-
-  useEffect(() => {
-    let interval: any
-    if (resendTimer > 0) {
-      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000)
-    }
-    return () => clearInterval(interval)
-  }, [resendTimer])
 
   const [sessionExpiredNotice] = useState<string | null>(() => {
     const notice = sessionStorage.getItem('gantavya_session_expired')
@@ -544,97 +525,10 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
     setLoading(false)
   }
 
-  // Handle Send Phone OTP
-  const handleSendPhoneOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    setError('')
-    const cleanedDigits = phone.replace(/\D/g, '')
-    if (cleanedDigits.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await fetch(`${API_URL}/api/auth/phone/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanedDigits }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.detail || 'Could not send OTP. Please check the number.')
-      }
-
-      setOtpSent(true)
-      setDemoOtp(data.demo_otp || '')
-      setResendTimer(30)
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP code.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Handle Verify Phone OTP
-  const handleVerifyPhoneOtp = async (codeToVerify?: string) => {
-    setError('')
-    const code = codeToVerify || otpCode
-    if (code.length < 4) {
-      setError('Please enter the full 4-digit OTP code.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await fetch(`${API_URL}/api/auth/phone/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone,
-          otp: code.trim(),
-          full_name: fullName.trim() || undefined,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.detail || 'Invalid OTP code. Please check and retry.')
-      }
-
-      // Confetti celebration
-      try {
-        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } })
-      } catch {}
-
-      localStorage.setItem('civicpulse_token', data.access_token)
-      localStorage.setItem('civicpulse_user', JSON.stringify(data.user))
-      onAuth(data.user)
-      navigate(data.user.role === 'admin' ? '/admin' : data.user.role === 'worker' ? '/worker' : '/citizen')
-    } catch (err: any) {
-      setError(err.message || 'OTP verification failed.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const submitEmail = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setLoading(true)
     setError('')
-
-    // Client-side password validation for register
-    if (mode === 'register') {
-      if (password.length < 8) {
-        setError('Password must be at least 8 characters long.')
-        setLoading(false)
-        return
-      }
-      if (!/\d/.test(password) && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-        setError('Password must contain at least one number or special character.')
-        setLoading(false)
-        return
-      }
-    }
 
     const payload = mode === 'register' 
       ? { full_name: fullName.trim(), email: email.trim(), password }
@@ -646,32 +540,32 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      const result = await response.json()
+      const data = await response.json()
       if (!response.ok) {
-        if (response.status === 429) {
-          throw new Error(result.detail || 'Too many login attempts. Please wait a few minutes before retrying.')
-        }
-        let msg = 'Authentication failed. Please check your credentials.'
-        if (typeof result.detail === 'string') {
-          msg = result.detail
-        } else if (Array.isArray(result.detail) && result.detail.length > 0) {
-          msg = result.detail.map((d: any) => d.msg || d.message).join(', ')
-        }
+        let msg = 'Authentication failed'
+        if (typeof data.detail === 'string') msg = data.detail
+        else if (Array.isArray(data.detail)) msg = data.detail.map((d: any) => d.msg).join(', ')
         throw new Error(msg)
       }
-      localStorage.setItem('civicpulse_token', result.access_token)
-      localStorage.setItem('civicpulse_user', JSON.stringify(result.user))
-      onAuth(result.user)
-      navigate(result.user.role === 'admin' ? '/admin' : result.user.role === 'worker' ? '/worker' : '/citizen')
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Network error. Please retry.')
+
+      // Confetti celebration on login/signup
+      try {
+        confetti({ particleCount: 60, spread: 55, origin: { y: 0.7 } })
+      } catch {}
+
+      localStorage.setItem('civicpulse_token', data.access_token)
+      localStorage.setItem('civicpulse_user', JSON.stringify(data.user))
+      onAuth(data.user)
+      navigate(data.user.role === 'admin' ? '/admin' : data.user.role === 'worker' ? '/worker' : '/citizen')
+    } catch (err: any) {
+      setError(err.message || 'Unable to connect to service. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-shell">
       <div className="auth-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Link className="brand gantavya-brand" to="/">
@@ -695,31 +589,7 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
           </div>
         )}
 
-        {/* AUTH METHOD SWITCH TABS */}
-        <div className="auth-method-tabs">
-          <button
-            type="button"
-            className={`auth-tab-btn ${authMethod === 'phone' ? 'active' : ''}`}
-            onClick={() => {
-              setAuthMethod('phone')
-              setError('')
-            }}
-          >
-            <Smartphone size={16} /> Mobile OTP Login
-          </button>
-          <button
-            type="button"
-            className={`auth-tab-btn ${authMethod === 'email' ? 'active' : ''}`}
-            onClick={() => {
-              setAuthMethod('email')
-              setError('')
-            }}
-          >
-            <Mail size={16} /> Email & Password
-          </button>
-        </div>
-
-        {mode === 'login' && authMethod === 'email' && (
+        {mode === 'login' && (
           <div className="demo-accounts-box">
             <p className="demo-label">{t('quick_demo_access', 'Quick Demo Access')}</p>
             <div className="demo-buttons">
@@ -751,126 +621,63 @@ function AuthPage({ mode, onAuth }: { mode: 'login' | 'register'; onAuth: (user:
           </div>
         )}
 
-        {/* PHONE OTP AUTH FLOW */}
-        {authMethod === 'phone' && (
-          <div className="phone-auth-container">
-            {!otpSent ? (
-              <form className="report-form" onSubmit={handleSendPhoneOtp}>
-                {mode === 'register' && (
-                  <label>
-                    {t('full_name_label', 'Full name')}
-                    <input
-                      name="full_name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required
-                      minLength={2}
-                      maxLength={100}
-                      placeholder="Your full name"
-                    />
-                  </label>
-                )}
-                <label>
-                  <span>Mobile Phone Number</span>
-                  <div className="phone-input-group">
-                    <span className="country-code-badge">🇮🇳 +91</span>
-                    <input
-                      type="tel"
-                      className="phone-number-field"
-                      value={phone}
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
-                        setPhone(digits)
-                      }}
-                      required
-                      placeholder="98765 43210"
-                      autoFocus
-                    />
-                  </div>
-                </label>
-
-                {error && <p className="form-error">{error}</p>}
-
-                <button className="primary-button full" disabled={loading || phone.length < 10}>
-                  {loading ? 'Sending OTP Code...' : '📲 Send Verification Code (OTP)'} <ChevronRight size={17} />
+        {/* EMAIL & PASSWORD AUTH FORM */}
+        <form className="report-form" onSubmit={submitEmail}>
+          {mode === 'register' && (
+            <label>
+              {t('full_name_label', 'Full name')}
+              <input
+                name="full_name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                minLength={2}
+                maxLength={100}
+                placeholder="Your full name"
+                autoFocus
+              />
+            </label>
+          )}
+          <label>
+            {t('email_label', 'Email')}
+            <input
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              autoFocus={mode === 'login'}
+            />
+          </label>
+          <label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>{t('password_label', 'Password')}</span>
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  className="forgot-password-link-btn"
+                  onClick={() => setForgotModalOpen(true)}
+                >
+                  {t('forgot_password_btn', 'Forgot password?')}
                 </button>
-              </form>
-            ) : (
-              <ModernOtpInput
-                phone={phone}
-                loading={loading}
-                error={error}
-                demoOtp={demoOtp}
-                resendTimer={resendTimer}
-                onVerify={(code) => handleVerifyPhoneOtp(code)}
-                onResend={handleSendPhoneOtp}
-                onChangeNumber={() => {
-                  setOtpSent(false)
-                  setOtpCode('')
-                  setError('')
-                }}
-              />
-            )}
-          </div>
-        )}
-
-        {/* EMAIL & PASSWORD AUTH FLOW */}
-        {authMethod === 'email' && (
-          <form className="report-form" onSubmit={submitEmail}>
-            {mode === 'register' && (
-              <label>
-                {t('full_name_label', 'Full name')}
-                <input
-                  name="full_name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  minLength={2}
-                  maxLength={100}
-                  placeholder="Your name"
-                />
-              </label>
-            )}
-            <label>
-              {t('email_label', 'Email')}
-              <input
-                name="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-              />
-            </label>
-            <label>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>{t('password_label', 'Password')}</span>
-                {mode === 'login' && (
-                  <button
-                    type="button"
-                    className="forgot-password-link-btn"
-                    onClick={() => setForgotModalOpen(true)}
-                  >
-                    {t('forgot_password_btn', 'Forgot password?')}
-                  </button>
-                )}
-              </div>
-              <input
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                placeholder="At least 8 characters with numbers"
-              />
-            </label>
-            {error && <p className="form-error">{error}</p>}
-            <button className="primary-button full" disabled={loading}>
-              {loading ? t('connecting', 'Connecting...') : mode === 'login' ? t('sign_in_btn', 'Sign in') : t('create_acc_btn', 'Create account')} <ChevronRight size={17} />
-            </button>
-          </form>
-        )}
+              )}
+            </div>
+            <input
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              placeholder="At least 8 characters with numbers"
+            />
+          </label>
+          {error && <p className="form-error">{error}</p>}
+          <button className="primary-button full" disabled={loading}>
+            {loading ? t('connecting', 'Connecting...') : mode === 'login' ? t('sign_in_btn', 'Sign in') : t('create_acc_btn', 'Create account')} <ChevronRight size={17} />
+          </button>
+        </form>
 
         <p className="auth-switch">
           {mode === 'login' ? t('new_to_cp', 'New to Gantavya?') : t('already_have_acc', 'Already have an account?')}{' '}
@@ -908,6 +715,7 @@ function ForgotPasswordModal({
   const [otp, setOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [demoOtp, setDemoOtp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -932,6 +740,7 @@ function ForgotPasswordModal({
         else if (Array.isArray(data.detail)) msg = data.detail.map((d: any) => d.msg).join(', ')
         throw new Error(msg)
       }
+      setDemoOtp(data.demo_otp || '')
       setStep('otp')
     } catch (err: any) {
       setError(err.message || 'Failed to request verification code')
@@ -989,6 +798,7 @@ function ForgotPasswordModal({
     setStep('email')
     setEmail('')
     setOtp('')
+    setDemoOtp('')
     setNewPassword('')
     setConfirmPassword('')
     setError('')
@@ -1041,10 +851,25 @@ function ForgotPasswordModal({
               <div>
                 <p className="email-sent-title">OTP Sent Successfully</p>
                 <p className="email-sent-desc">
-                  A 6-digit verification code has been dispatched to your registered email. Please check your Inbox or Spam folder.
+                  A 6-digit verification code has been dispatched to <strong>{email}</strong>. Please check your Inbox.
                 </p>
               </div>
             </div>
+
+            {demoOtp && (
+              <div style={{ margin: '10px 0 14px', padding: '10px 14px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', color: '#166534', fontWeight: 600 }}>
+                  ⚡ Verification Code: <strong style={{ letterSpacing: '2px', color: '#0f172a' }}>{demoOtp}</strong>
+                </span>
+                <button
+                  type="button"
+                  style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                  onClick={() => setOtp(demoOtp)}
+                >
+                  Auto-Fill
+                </button>
+              </div>
+            )}
 
             <label>
               <span>6-Digit Verification Code (OTP)</span>

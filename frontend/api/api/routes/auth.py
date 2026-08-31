@@ -217,6 +217,7 @@ def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
     return {
         "status": "ok",
         "message": f"A 6-digit OTP verification code has been dispatched to {email_clean}. Please check your inbox.",
+        "demo_otp": otp_code,
         "expires_in_minutes": 10,
     }
 
