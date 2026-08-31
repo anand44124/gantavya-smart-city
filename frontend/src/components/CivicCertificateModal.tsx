@@ -67,6 +67,10 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 <div className="cert-authority-title">
                   <h4>MUNICIPAL CORPORATION & SMART CITY GOVERNANCE AUTHORITY</h4>
                   <h5>NATIONAL CIVIC EXCELLENCE & HONOUR COMMITTEE</h5>
+                  <div className="cert-national-initiatives">
+                    <span className="initiative-tag sbm">🧹 SWACHH BHARAT MISSION</span>
+                    <span className="initiative-tag di">🇮🇳 DIGITAL INDIA</span>
+                  </div>
                 </div>
                 <div className="cert-emblem-badge">
                   <ShieldCheck size={36} color="#059669" />
@@ -123,10 +127,25 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 </div>
 
                 <div className="cert-seal-center">
-                  <div className="cert-gold-seal-disc">
-                    <Award size={36} color="#d97706" />
-                    <span>SMART CITY</span>
-                    <small>2026</small>
+                  <div className="cert-national-ashoka-seal">
+                    <svg className="ashoka-chakra-svg" viewBox="0 0 100 100" width="44" height="44">
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d97706" strokeWidth="4" />
+                      <circle cx="50" cy="50" r="38" fill="#0f172a" stroke="#d97706" strokeWidth="1.5" />
+                      <circle cx="50" cy="50" r="10" fill="#d97706" />
+                      {Array.from({ length: 24 }).map((_, i) => (
+                        <line
+                          key={i}
+                          x1="50"
+                          y1="50"
+                          x2={50 + 38 * Math.cos((i * 15 * Math.PI) / 180)}
+                          y2={50 + 38 * Math.sin((i * 15 * Math.PI) / 180)}
+                          stroke="#d97706"
+                          strokeWidth="1.5"
+                        />
+                      ))}
+                    </svg>
+                    <span className="ashoka-seal-text">सत्यमेव जयते</span>
+                    <small className="ashoka-seal-sub">GOVT OF INDIA</small>
                   </div>
                 </div>
 
