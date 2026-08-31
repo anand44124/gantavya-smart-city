@@ -10705,6 +10705,14 @@ select:focus, input:focus, textarea:focus {
   background: #e0f2fe;
 }
 
+/* Hide all leftover Google reCAPTCHA floating badges */
+.grecaptcha-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 
 
 
