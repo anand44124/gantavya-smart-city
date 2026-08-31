@@ -118,8 +118,7 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
               {/* FOOTER SIGNATURES & OFFICIAL SEALS */}
               <div className="cert-footer-signatures">
                 <div className="cert-signature-col">
-                  {/* Clean blank space for real signature */}
-                  <div className="cert-signature-img-space" />
+                  <div className="cert-calligraphy-sig">Dr. S. K. Verma</div>
                   <div className="signature-line" />
                   <strong>Dr. S. K. Verma</strong>
                   <span>Municipal Commissioner</span>
@@ -135,8 +134,7 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
                 </div>
 
                 <div className="cert-signature-col">
-                  {/* Clean blank space for real signature */}
-                  <div className="cert-signature-img-space" />
+                  <div className="cert-calligraphy-sig alt-sig">Arjun Sharma</div>
                   <div className="signature-line" />
                   <strong>Arjun Sharma</strong>
                   <span>Chief Governance Officer</span>
