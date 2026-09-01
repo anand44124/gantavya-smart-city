@@ -11384,4 +11384,19 @@ select:focus, input:focus, textarea:focus {
     flex: 1 !important;
     justify-content: center !important;
   }
+
+  .certificate-scroll-wrapper {
+    overflow-x: hidden !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding: 8px 0 0 0 !important;
+  }
+
+  .certificate-paper-frame {
+    min-width: 760px !important;
+    max-width: 760px !important;
+    transform: scale(calc((100vw - 32px) / 760)) !important;
+    transform-origin: top center !important;
+    margin-bottom: calc(-1 * (650px * (1 - (100vw - 32px) / 760))) !important;
+  }
 }
