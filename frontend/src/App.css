@@ -11323,3 +11323,57 @@ select:focus, input:focus, textarea:focus {
   object-fit: contain;
   mix-blend-mode: multiply;
 }
+
+/* RESPONSIVE MOBILE FIX FOR CERTIFICATE MODAL */
+.certificate-modal-overlay {
+  z-index: 99999999 !important;
+}
+
+.certificate-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fdfbf7;
+}
+
+@media (max-width: 768px) {
+  .certificate-modal-overlay {
+    padding: 12px 6px 80px 6px !important;
+    align-items: flex-start !important;
+  }
+  
+  .certificate-modal-container {
+    border-radius: 16px !important;
+    margin-top: 10px !important;
+  }
+
+  .certificate-action-bar {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .cert-action-info {
+    justify-content: space-between !important;
+  }
+
+  .cert-name-edit-field {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .cert-name-input-bar {
+    width: 100% !important;
+  }
+
+  .cert-action-btns {
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  .print-cert-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+}

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Award, Edit3, Printer, ShieldCheck, X } from 'lucide-react'
 
 type User = {
@@ -20,11 +21,20 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
   const certId = `GAN-2026-HONOR-${(user.full_name.length * 77 + points).toString().slice(0, 5)}`
   const dateStr = '31 August 2026'
 
+  useEffect(() => {
+    // Prevent background scrolling while certificate is open on mobile/desktop
+    const originalStyle = window.getComputedStyle(document.body).overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalStyle
+    }
+  }, [])
+
   const handlePrint = () => {
     window.print()
   }
 
-  return (
+  const modalContent = (
     <div className="certificate-modal-overlay" onClick={onClose}>
       <div className="certificate-modal-container" onClick={(e) => e.stopPropagation()}>
         {/* MODAL ACTION BAR */}
@@ -60,8 +70,9 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
           </div>
         </div>
 
-        {/* PRINTABLE CERTIFICATE CANVAS */}
-        <div className="certificate-paper-frame" id="printable-certificate">
+        {/* PRINTABLE CERTIFICATE SCROLL WRAPPER */}
+        <div className="certificate-scroll-wrapper">
+          <div className="certificate-paper-frame" id="printable-certificate">
           {/* GOLD ORNAMENTAL DOUBLE BORDER */}
           <div className="cert-border-outer">
             <div className="cert-border-inner">
@@ -168,5 +179,8 @@ export function CivicCertificateModal({ user, onClose }: CivicCertificateModalPr
         </div>
       </div>
     </div>
+  </div>
   )
+
+  return createPortal(modalContent, document.body)
 }
