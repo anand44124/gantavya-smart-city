@@ -85,6 +85,12 @@
 ### Q7: *"Data security aur privacy kaise ensure karte ho?"*
 > **Answer:** *"JWT token-based stateless authentication, bcrypt password hashing, 30-minute inactivity auto-logout session protection, aur citizen personal details public feed par anonymized rehti hain."*
 
+### Q8: *"Task direct worker ko auto-assign kyu nahi hota? Admin approval kyu beech me hai (Human-in-the-Loop)?"*
+> **Answer:** *"Sir, municipal governance me **Human-in-the-Loop (HITL)** architecture critical hai. AI photo scan karke nearest workers aur routes calculate kar deta hai, lekin Admin approval isliye zaroori hai taaki worker workload balance ho aur agar koi staff on-leave ya emergency par ho toh galti se ticket usko assign na ho. Admin ke 1-click assign karte hi worker ko automated GIS route navigation mil jati hai."*
+
+### Q9: *"Citizen ko gallery upload kyu allow kiya hai jabki worker ko live camera mandatory hai?"*
+> **Answer:** *"Sir, **Citizen is an Informant** — travel/traffic safety aur dashcam/CCTV footage submit karne ke liye gallery convenient hai, jabki anti-spam ke liye **Gemini AI Filter** laga hai. Lekin **Worker is the Resolution Authority**, isliye accountability ke liye worker ko live on-site camera se hi 'After' photo daalna mandatory hai."*
+
 ---
 
 ## 🎬 6. Team Stage Roles (Presentation me sabka part)
