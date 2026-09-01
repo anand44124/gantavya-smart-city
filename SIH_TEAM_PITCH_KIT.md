@@ -91,6 +91,24 @@
 ### Q9: *"Citizen ko gallery upload kyu allow kiya hai jabki worker ko live camera mandatory hai?"*
 > **Answer:** *"Sir, **Citizen is an Informant** — travel/traffic safety aur dashcam/CCTV footage submit karne ke liye gallery convenient hai, jabki anti-spam ke liye **Gemini AI Filter** laga hai. Lekin **Worker is the Resolution Authority**, isliye accountability ke liye worker ko live on-site camera se hi 'After' photo daalna mandatory hai."*
 
+### Q10: *"Agar citizen Google se ya kisi doosre sheher ki purani photo utha kar upload kare points ke liye?"*
+> **Answer:** *"Sir, 3 security checks hain: 1. **AI Image Hash & Metadata Check:** Device GPS aur photo EXIF data match hota hai. 2. **Anti-Duplication:** Same category ke nearby existing coordinates par duplicate merge ho jata hai. 3. **Hold-on-Points:** Points tab tak release nahi hote jab tak Field Worker physically wahan pahunch kar issue verify na kare."*
+
+### Q11: *"Agar worker wahan ja kar kisi doosre saaf raste ki photo click karke 'Resolved' mark kar de?"*
+> **Answer:** *"Sir, do checks hain: Pehla, **Geofencing Radius Lock** — camera sirf tabhi open hota hai jab worker issue ke 50m radius ke andar ho. Doosra, **Citizen Close-Loop Feedback** — resolution ke baad original reporter citizen ke paas 1-click 'Confirm / Re-open' notification jata hai. Agar citizen reject kare toh case audit me chala jata hai."*
+
+### Q12: *"Agar internet/cloud par Gemini AI API slow ho jaye ya down ho jaye?"*
+> **Answer:** *"Hamare backend `services/ai.py` me **Multi-Tier Fallback Pipeline** hai: Pehle `gemini-3.6-flash` try hota hai, agar fail ho toh `gemini-1.5-flash` / `gemini-2.0-flash`, aur agar cloud AI unreachable ho toh local rule-based category mapper instant default response de deta hai (Zero user lag / Zero crash)."*
+
+### Q13: *"Agar koi issue bohot bada ho jo 24-48 ghante me theek na ho sake (jaise bridge damage ya main pipeline burst)?"*
+> **Answer:** *"System me **Dynamic Multi-Stage SLA** hai. Simple issues (Pothole/Garbage) ka 24h SLA hota hai, jabki Major Infrastructure issues par Admin 'Extended SLA with Sub-Milestones' set kar sakta hai (e.g. Day 1: Excavation, Day 3: Pipe fitting, Day 5: Road patching) jiska status citizen ko live timeline me dikhta hai."*
+
+### Q14: *"Agar ek issue do departments ka ho (e.g. Jal Board pipeline burst hone se PWD road tooti)?"*
+> **Answer:** *"AI auto-tagging primary department (*Jal Board*) ko pehle dispatch karti hai. Once water leakage fix hoti hai, system automatically secondary sub-ticket (*PWD Road Repair*) generate karke relevant department ko forward kar deta hai."*
+
+### Q15: *"Pura metropolitan sheher (e.g. Delhi/Mumbai me 1 crore log) ek saath use karein toh scale kaise hoga?"*
+> **Answer:** *"Architecture 100% cloud-native aur stateless hai: **FastAPI** ASGI async I/O handle karta hai, **Neon PostgreSQL** serverless compute par load ke sath auto-scale hota hai, aur **PostGIS/Leaflet spatial indexing** se city-level GIS queries sub-50ms me execute hoti hain."*
+
 ---
 
 ## 🎬 6. Team Stage Roles (Presentation me sabka part)
