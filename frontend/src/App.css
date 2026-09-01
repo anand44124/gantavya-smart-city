@@ -11333,7 +11333,14 @@ select:focus, input:focus, textarea:focus {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  background: #fdfbf7;
+  background: #f8fafc;
+  border-radius: 0 0 20px 20px;
+}
+
+.certificate-paper-frame {
+  min-width: 760px !important;
+  max-width: 920px !important;
+  margin: 0 auto !important;
 }
 
 @media (max-width: 768px) {
@@ -11345,6 +11352,7 @@ select:focus, input:focus, textarea:focus {
   .certificate-modal-container {
     border-radius: 16px !important;
     margin-top: 10px !important;
+    max-width: 100% !important;
   }
 
   .certificate-action-bar {
