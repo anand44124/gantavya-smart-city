@@ -31,6 +31,13 @@ class Base(DeclarativeBase):
 def get_db():
     db = SessionLocal()
     try:
+        from models.entities import User
+        if db.query(User).count() == 0:
+            from main import seed_demo_data
+            seed_demo_data()
+    except Exception as e:
+        print("[On-Demand Seed Notice]", e)
+    try:
         yield db
     finally:
         db.close()
