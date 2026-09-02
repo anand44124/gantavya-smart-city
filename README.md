@@ -125,6 +125,7 @@ gantavya-smart-city/
 │   │   ├── App.tsx             # Routing & Global State
 │   │   └── App.css             # Glassmorphism & Fluid Styling
 │   └── public/                 # PWA Manifest, Official Logos, Seals
+├── Team_Gantavya.pptx          # Official Presentation Slide Deck
 ├── HANDOFF.md                  # System Architecture Handoff Document
 └── LICENSE                     # MIT Open Source License
 ```
