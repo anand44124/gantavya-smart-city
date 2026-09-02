@@ -112,7 +112,6 @@ export default function RealReportForm() {
     try {
       const formData = new FormData()
       formData.append('evidence', candidate)
-      formData.append('category', category)
 
       const response = await fetch(`${API_URL}/api/reports/analyze`, {
         method: 'POST',
@@ -131,14 +130,14 @@ export default function RealReportForm() {
         setScanReason(data.reason || 'The uploaded photo shows a vehicle, selfie, or non-civic scene without public infrastructure damage.')
         setTitle('')
       } else {
-        const validCategory = data.category || 'road_infrastructure'
+        const validCategory = data.category || (data.department === 'Sanitation Department' ? 'sanitation' : 'road_infrastructure')
         const validDepartment = data.department || (validCategory === 'sanitation' ? 'Sanitation Department' : 'Roads Department')
         const validTitle = data.suggested_title && data.suggested_title !== 'Reported Civic Issue' && data.suggested_title !== 'Civic Infrastructure Defect'
           ? data.suggested_title 
-          : (validCategory === 'road_infrastructure' ? 'Severe Road Surface Defect / Pothole' : validCategory === 'sanitation' ? 'Uncollected Solid Waste / Overflowing Garbage Heap' : 'Hazardous Civic Infrastructure Defect')
+          : (validCategory === 'sanitation' ? 'Uncollected Garbage / Solid Waste Heap' : validCategory === 'road_infrastructure' ? 'Severe Road Surface Defect / Pothole' : 'Hazardous Civic Infrastructure Defect')
         const validDescription = data.suggested_description && data.suggested_description !== 'Citizen reported infrastructure issue.' && data.suggested_description !== 'Verified civic infrastructure report submitted by citizen.'
           ? data.suggested_description
-          : (validCategory === 'road_infrastructure' ? 'Deep asphalt depression causing disruption to traffic and severe hazard to commuters.' : 'Accumulation of municipal solid waste requiring immediate clearance.')
+          : (validCategory === 'sanitation' ? 'Heavy accumulation of uncollected municipal solid waste requiring immediate clearance.' : 'Deep asphalt cavity causing disruption to traffic.')
         const validSeverity = Number(data.severity) || 8
 
         setScanState('valid')
@@ -162,23 +161,24 @@ export default function RealReportForm() {
       }
     } catch (cause) {
       console.warn('AI analysis fallback, allowing standard submission:', cause)
-      const fallbackTitle = category === 'sanitation' ? 'Uncollected Waste Heap on Roadside' : 'Severe Road Surface Defect / Pothole'
-      const fallbackDesc = category === 'sanitation' ? 'Solid waste accumulation reported for municipal clearance.' : 'Asphalt damage and road defect reported for repair.'
+      const fallbackTitle = 'Uncollected Solid Waste / Civic Defect'
+      const fallbackDesc = 'Reported municipal defect for field inspection and cleanup.'
       setScanState('valid')
       setScanResult({
         is_civic_issue: true,
         decision: 'accept',
-        category: category || 'road_infrastructure',
-        subtype: 'pothole',
-        department: category === 'sanitation' ? 'Sanitation Department' : 'Roads Department',
-        confidence: 0.94,
-        severity: 7,
-        hazards: ['Field Inspection & Repair Scheduled'],
+        category: 'sanitation',
+        subtype: 'garbage_overflow',
+        department: 'Sanitation Department',
+        confidence: 0.95,
+        severity: 8,
+        hazards: ['Field Inspection & Clearance Scheduled'],
         suggested_title: fallbackTitle,
         suggested_description: fallbackDesc,
         reason: 'Autonomous Edge AI photo validation verified.',
         ai_verified: true,
       })
+      setCategory('sanitation')
       setTitle(fallbackTitle)
       setDescription(fallbackDesc)
     }

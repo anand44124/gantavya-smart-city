@@ -159,12 +159,23 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image, category_hint: str | None =
                     print(f"[AI Vision Notice] Model {model_name} attempt {attempt} failed: {e}")
                 time.sleep(0.5)
 
-    # Dynamic fallback calibrated to selected category
-    cat = category_hint or "road_infrastructure"
-    if cat not in DEPARTMENTS:
-        cat = "road_infrastructure"
-    dept = DEPARTMENTS.get(cat, "Roads Department")
-    subtype = SUBTYPES.get(cat, "pothole")
+    # Dynamic visual detection if Gemini is rate-limited or no category hint provided
+    cat = category_hint
+    if not cat or cat not in DEPARTMENTS:
+        stat = ImageStat.Stat(pil_img)
+        mean_r, mean_g, mean_b = stat.mean
+        avg_mean = (mean_r + mean_g + mean_b) / 3.0
+        avg_std = (stat.stddev[0] + stat.stddev[1] + stat.stddev[2]) / 3.0
+
+        if mean_b > mean_r + 25 and mean_b > mean_g + 15:
+            cat = "water_drainage"
+        elif avg_mean > 165.0 or (avg_std > 55.0 and avg_mean > 135.0):
+            cat = "sanitation"
+        else:
+            cat = "road_infrastructure"
+
+    dept = DEPARTMENTS.get(cat, "Sanitation Department" if cat == "sanitation" else "Roads Department")
+    subtype = SUBTYPES.get(cat, "garbage_overflow" if cat == "sanitation" else "pothole")
     
     title_map = {
         "road_infrastructure": "Severe Road Surface Defect / Pothole",
