@@ -9,9 +9,11 @@ This document serves as a complete context handoff for continuing development on
 
 * **Live Portal URL:** [https://gantavya-portal.vercel.app](https://gantavya-portal.vercel.app)
 * **GitHub Repository:** [anand44124/gantavya-smart-city](https://github.com/anand44124/gantavya-smart-city)
-* **Database:** Neon Cloud PostgreSQL (`neondb`)
-* **Backend API:** FastAPI (Python 3.12/3.14) running on Vercel Serverless & local Uvicorn
-* **Frontend UI:** React + Vite + TypeScript with Lucide Icons & Tailwind/Frosted Crystal CSS
+* **Demo Citizen:** `citizen1@civicpulse.demo` / `Citizen@123` (50,000 PTS, Diamond Reformer)
+* **Admin:** `admin@civicpulse.demo` / `Admin@123`
+* **Worker:** `worker1@civicpulse.demo` / `Worker@123`
+* **Backend API:** FastAPI running on Vercel Serverless with resilient database storage
+* **Frontend UI:** React + Vite + TypeScript with full fluid responsiveness & Locked Certificate design
 
 ---
 
