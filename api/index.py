@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 # Ensure database path is resolved properly in serverless environments
-db_path = Path("/tmp/civicpulse.db")
+db_path = Path("/tmp/gantavya_resilient.db")
 os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
 
 from fastapi import FastAPI, Request, Response
@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from api.routes import admin, auth, issues, reports, rewards, webhooks, workers
 from config.settings import settings
-from db import Base, engine
+from db import Base, engine, SessionLocal
 
 app = FastAPI(title="Gantavya Cloud API", version="1.0.0")
 
@@ -35,7 +35,6 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(rewards.router, prefix="/api/rewards", tags=["rewards"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
 
-
 Base.metadata.create_all(bind=engine)
 
 try:
@@ -43,4 +42,5 @@ try:
     seed_demo_data()
 except Exception as e:
     print("[Serverless Seed Notice]", e)
+
 
