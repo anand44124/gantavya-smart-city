@@ -37,3 +37,10 @@ app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
 
 
 Base.metadata.create_all(bind=engine)
+
+try:
+    from main import seed_demo_data
+    seed_demo_data()
+except Exception as e:
+    print("[Serverless Seed Notice]", e)
+
