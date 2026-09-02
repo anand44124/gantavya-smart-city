@@ -26,6 +26,23 @@ def summary(user: User = Depends(current_user), db: Session = Depends(get_db)) -
         "resolved": sum(issue.status in RESOLVED_STATUSES for issue in issues)
     }
 
+@router.post("/reset-demo")
+def reset_demo(db: Session = Depends(get_db)):
+    from models.entities import Report, Issue, Assignment, RepairEvidence, CommunityVerification, User
+    db.query(Report).delete()
+    db.query(Issue).delete()
+    db.query(Assignment).delete()
+    db.query(RepairEvidence).delete()
+    db.query(CommunityVerification).delete()
+    
+    c1 = db.query(User).filter(User.email == "citizen1@civicpulse.demo").first()
+    if c1:
+        c1.points = 50000
+        c1.badge_level = "Diamond Reformer"
+    
+    db.commit()
+    return {"status": "ok", "message": "Demo state reset to clean baseline (50,000 PTS & 0 reports)"}
+
 @router.post("/issues/{issue_id}/assign")
 def assign_worker(issue_id: int, payload: AssignmentIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     if user.role != "admin":
