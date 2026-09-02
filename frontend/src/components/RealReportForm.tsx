@@ -21,6 +21,7 @@ import { useTranslation } from '../i18n/LanguageContext'
 import VoiceAssistant from './VoiceAssistant'
 import InteractiveLocationPicker from './InteractiveLocationPicker'
 import { extractExifGps } from '../utils/exifGps'
+import { authHeaders } from './reportApi'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://gantavya-smart-city.onrender.com'
 type Location = { latitude: number; longitude: number; accuracy?: number; address?: string; source?: 'exif' | 'gps' | 'manual' }
