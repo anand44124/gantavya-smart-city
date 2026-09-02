@@ -105,10 +105,7 @@ def seed_demo_data():
             if not u:
                 u = User(full_name=name, email=email, password_hash=hash_password(pwd), role="citizen", points=pts, badge_level=badge, avatar_url=av)
                 db.add(u)
-            else:
-                u.points = pts
-                u.badge_level = badge
-            db.commit()
+                db.commit()
 
         admin = db.query(User).filter(User.email == "admin@civicpulse.demo").first()
         if not admin:
