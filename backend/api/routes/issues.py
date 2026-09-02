@@ -21,9 +21,7 @@ def serialize_report(report: Report) -> ReportOut:
     })
 
 @router.get("", response_model=list[IssueOut])
-def list_issues(user: User = Depends(current_user), db: Session = Depends(get_db)):
-    if user.role == "worker":
-        raise HTTPException(403, "Workers can only access assigned issues")
+def list_issues(db: Session = Depends(get_db)):
     return [to_issue_out(db, issue) for issue in db.query(Issue).order_by(Issue.updated_at.desc()).all()]
 
 @router.get("/evidence/{evidence_id}/file")
