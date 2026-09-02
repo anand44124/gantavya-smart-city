@@ -5,7 +5,7 @@ import time
 import base64
 import asyncio
 import requests
-from PIL import Image
+from PIL import Image, ImageStat
 from config.settings import settings
 try:
     from services.local_ai import analyze_civic_image_local, validate_resolution_proof_local
@@ -108,7 +108,7 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image, category_hint: str | None =
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
             for attempt in range(1):
                 try:
-                    resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(2, 4))
+                    resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(4, 10))
                     if resp.status_code == 200:
                         candidates = resp.json().get("candidates", [])
                         if candidates:
@@ -163,14 +163,15 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image, category_hint: str | None =
     cat = category_hint
     if not cat or cat not in DEPARTMENTS:
         stat = ImageStat.Stat(pil_img)
-        mean_r, mean_g, mean_b = stat.mean
-        avg_mean = (mean_r + mean_g + mean_b) / 3.0
-        avg_std = (stat.stddev[0] + stat.stddev[1] + stat.stddev[2]) / 3.0
+        r_mean, g_mean, b_mean = stat.mean
+        avg_brightness = (r_mean + g_mean + b_mean) / 3.0
 
-        if mean_b > mean_r + 25 and mean_b > mean_g + 15:
-            cat = "water_drainage"
-        elif avg_mean > 165.0 or (avg_std > 55.0 and avg_mean > 135.0):
+        if b_mean > r_mean + 15 and b_mean > 150:
+            cat = "street_electrical"
+        elif avg_brightness > 185.0:
             cat = "sanitation"
+        elif b_mean > r_mean + 10:
+            cat = "water_drainage"
         else:
             cat = "road_infrastructure"
 
@@ -189,7 +190,7 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image, category_hint: str | None =
         "road_infrastructure": "Deep asphalt cavity or road surface defect creating hazard for commuters.",
         "sanitation": "Accumulation of uncollected municipal solid waste requiring immediate sanitation clearance.",
         "water_drainage": "Water pipeline rupture or blocked storm drain causing flooding.",
-        "street_electrical": "Non-functional streetlight or hazardous utility wiring detected.",
+        "street_electrical": "Broken glass bulb or non-functional streetlight electrical fixture requiring repair.",
         "public_safety": "Critical safety hazard such as missing sewer cover, open pit, or fallen tree.",
         "other": "Verified civic infrastructure report submitted by citizen.",
     }

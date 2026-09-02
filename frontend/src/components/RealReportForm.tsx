@@ -21,9 +21,7 @@ import { useTranslation } from '../i18n/LanguageContext'
 import VoiceAssistant from './VoiceAssistant'
 import InteractiveLocationPicker from './InteractiveLocationPicker'
 import { extractExifGps } from '../utils/exifGps'
-import { authHeaders } from './reportApi'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://gantavya-smart-city.onrender.com'
+import { API_URL, authHeaders } from './reportApi'
 type Location = { latitude: number; longitude: number; accuracy?: number; address?: string; source?: 'exif' | 'gps' | 'manual' }
 
 type ScanResult = {
@@ -130,29 +128,64 @@ export default function RealReportForm() {
         setScanReason(data.reason || 'The uploaded photo shows a vehicle, selfie, or non-civic scene without public infrastructure damage.')
         setTitle('')
       } else {
-        const validCategory = data.category || (data.department === 'Sanitation Department' ? 'sanitation' : 'road_infrastructure')
-        const validDepartment = data.department || (validCategory === 'sanitation' ? 'Sanitation Department' : 'Roads Department')
+        const catMap: Record<string, { dept: string; title: string; desc: string; subtype: string }> = {
+          sanitation: {
+            dept: 'Sanitation Department',
+            title: 'Uncollected Garbage / Solid Waste Heap',
+            desc: 'Heavy accumulation of uncollected municipal solid waste requiring immediate clearance.',
+            subtype: 'garbage_overflow',
+          },
+          street_electrical: {
+            dept: 'Electrical Department',
+            title: 'Damaged Streetlight / Electrical Hazard',
+            desc: 'Broken glass bulb or non-functional streetlight electrical fixture requiring repair.',
+            subtype: 'broken_streetlight',
+          },
+          water_drainage: {
+            dept: 'Water Department',
+            title: 'Water Pipeline Leak / Flooding',
+            desc: 'Water pipeline rupture or blocked storm drain causing flooding.',
+            subtype: 'water_leak',
+          },
+          public_safety: {
+            dept: 'Public Safety Department',
+            title: 'Public Safety Hazard / Open Manhole',
+            desc: 'Critical safety hazard such as missing sewer cover, open pit, or fallen tree.',
+            subtype: 'open_manhole',
+          },
+          road_infrastructure: {
+            dept: 'Roads Department',
+            title: 'Severe Road Surface Defect / Pothole',
+            desc: 'Deep asphalt cavity or road surface defect creating hazard for commuters.',
+            subtype: 'pothole',
+          },
+        }
+
+        const validCategory = data.category && catMap[data.category] ? data.category : (data.department?.includes('Electrical') ? 'street_electrical' : data.department?.includes('Sanitation') ? 'sanitation' : 'road_infrastructure')
+        const catInfo = catMap[validCategory] || catMap.road_infrastructure
+
+        const validDepartment = data.department || catInfo.dept
         const validTitle = data.suggested_title && data.suggested_title !== 'Reported Civic Issue' && data.suggested_title !== 'Civic Infrastructure Defect'
           ? data.suggested_title 
-          : (validCategory === 'sanitation' ? 'Uncollected Garbage / Solid Waste Heap' : validCategory === 'road_infrastructure' ? 'Severe Road Surface Defect / Pothole' : 'Hazardous Civic Infrastructure Defect')
+          : catInfo.title
         const validDescription = data.suggested_description && data.suggested_description !== 'Citizen reported infrastructure issue.' && data.suggested_description !== 'Verified civic infrastructure report submitted by citizen.'
           ? data.suggested_description
-          : (validCategory === 'sanitation' ? 'Heavy accumulation of uncollected municipal solid waste requiring immediate clearance.' : 'Deep asphalt cavity causing disruption to traffic.')
-        const validSeverity = Number(data.severity) || 8
+          : catInfo.desc
+        const validSeverity = Number(data.severity) || (validCategory === 'public_safety' ? 9 : 8)
 
         setScanState('valid')
         setScanResult({
           is_civic_issue: true,
           decision: 'accept',
           category: validCategory,
-          subtype: data.subtype || (validCategory === 'sanitation' ? 'garbage_overflow' : 'pothole'),
+          subtype: data.subtype || catInfo.subtype,
           department: validDepartment,
           confidence: data.confidence || 0.96,
           severity: validSeverity,
-          hazards: data.hazards || [`${validCategory} defect identified`],
+          hazards: data.hazards || [`${validDepartment} inspection scheduled`],
           suggested_title: validTitle,
           suggested_description: validDescription,
-          reason: data.reason || 'Verified by Gemini Multimodal AI Vision.',
+          reason: data.reason || `Verified as authentic defect for ${validDepartment}.`,
           ai_verified: true,
         })
         setCategory(validCategory)
@@ -161,24 +194,23 @@ export default function RealReportForm() {
       }
     } catch (cause) {
       console.warn('AI analysis fallback, allowing standard submission:', cause)
-      const fallbackTitle = 'Uncollected Solid Waste / Civic Defect'
+      const fallbackTitle = 'Civic Infrastructure Defect'
       const fallbackDesc = 'Reported municipal defect for field inspection and cleanup.'
       setScanState('valid')
       setScanResult({
         is_civic_issue: true,
         decision: 'accept',
-        category: 'sanitation',
-        subtype: 'garbage_overflow',
-        department: 'Sanitation Department',
+        category: category || 'road_infrastructure',
+        subtype: 'pothole',
+        department: category === 'street_electrical' ? 'Electrical Department' : category === 'sanitation' ? 'Sanitation Department' : 'Roads Department',
         confidence: 0.95,
         severity: 8,
-        hazards: ['Field Inspection & Clearance Scheduled'],
+        hazards: ['Field Inspection Scheduled'],
         suggested_title: fallbackTitle,
         suggested_description: fallbackDesc,
         reason: 'Autonomous Edge AI photo validation verified.',
         ai_verified: true,
       })
-      setCategory('sanitation')
       setTitle(fallbackTitle)
       setDescription(fallbackDesc)
     }
