@@ -43,7 +43,7 @@ import { LANGUAGES, type LanguageCode } from './i18n/translations'
 
 type Role = 'citizen' | 'admin' | 'worker'
 type SessionUser = { id: number; full_name: string; email: string; role: Role; avatar_url?: string | null; points?: number; badge_level?: string }
-const API_URL = import.meta.env.VITE_API_URL || ''
+const API_URL = import.meta.env.VITE_API_URL || 'https://gantavya-smart-city.onrender.com'
 
 function App() {
   return (
