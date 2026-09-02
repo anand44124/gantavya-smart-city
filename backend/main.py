@@ -89,9 +89,10 @@ if settings.database_url.startswith("sqlite"):
 Path("./uploads").mkdir(exist_ok=True)
 
 def seed_demo_data():
-    from db import SessionLocal
+    from db import SessionLocal, Base, engine
     from auth import hash_password
     from models.entities import User, Report, Issue, Assignment, RepairEvidence, CommunityVerification
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         # 1. Seed Multiple Citizens for Leaderboard & Community
