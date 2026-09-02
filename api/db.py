@@ -1,4 +1,5 @@
-from sqlalchemy import create_engine
+import os
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from config.settings import settings
 
@@ -8,8 +9,20 @@ if db_url.startswith("postgresql://") and "+psycopg" not in db_url:
 elif db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
 
-connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
-engine = create_engine(db_url, connect_args=connect_args)
+def get_engine():
+    try:
+        connect_args = {"connect_timeout": 3} if "postgresql" in db_url else {"check_same_thread": False}
+        eng = create_engine(db_url, connect_args=connect_args)
+        with eng.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return eng
+    except Exception as e:
+        print(f"[DB Warning] Primary PostgreSQL unavailable ({e}). Activating resilient SQLite fallback...")
+        sqlite_path = "/tmp/gantavya_resilient.db" if os.path.exists("/tmp") else "gantavya_resilient.db"
+        fallback_url = f"sqlite:///{sqlite_path}"
+        return create_engine(fallback_url, connect_args={"check_same_thread": False})
+
+engine = get_engine()
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 class Base(DeclarativeBase):
