@@ -176,8 +176,8 @@ export default function RealReportForm() {
             })
           }
 
-          // 1. Streetlight / Electrical (Blue Sky Background: Blue > Red + 15 && Blue > 130)
-          if (bMean > rMean + 15 && bMean > 130) {
+          // 1. Streetlight / Electrical (Blue Sky Background: Blue > Red + 15 && Blue > 160)
+          if (bMean > rMean + 15 && bMean > 160) {
             return resolve({
               is_civic_issue: true,
               decision: 'accept',
@@ -192,8 +192,8 @@ export default function RealReportForm() {
             })
           }
 
-          // 2. Sanitation / Garbage (Bright plastic bags & multicolored solid waste: avg brightness > 180 || high color variance)
-          if (avgBrightness > 180 || (avgStd > 48 && avgBrightness > 130)) {
+          // 2. Sanitation / Garbage (White/Multi-colored Plastic Waste Heap: Avg Brightness > 180)
+          if (avgBrightness > 180) {
             return resolve({
               is_civic_issue: true,
               decision: 'accept',
@@ -208,7 +208,7 @@ export default function RealReportForm() {
             })
           }
 
-          // 3. Water Drainage / Flooding (Water puddle / blue-gray wet tone: Blue > Red + 8)
+          // 3. Water Drainage / Flooding (Water puddle / blue-gray wet tone: Blue > Red + 8, dark/mid road)
           if (bMean > rMean + 8) {
             return resolve({
               is_civic_issue: true,
@@ -224,7 +224,7 @@ export default function RealReportForm() {
             })
           }
 
-          // 4. Road Infrastructure / Pothole (Asphalt / dark road pavement)
+          // 4. Road Infrastructure / Pothole (Asphalt / dark road pavement: Avg Brightness < 180)
           return resolve({
             is_civic_issue: true,
             decision: 'accept',
