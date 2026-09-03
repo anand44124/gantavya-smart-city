@@ -162,15 +162,16 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image, category_hint: str | None =
     # Dynamic visual detection if Gemini is rate-limited or no category hint provided
     cat = category_hint
     if not cat or cat not in DEPARTMENTS:
-        stat = ImageStat.Stat(pil_img)
-        r_mean, g_mean, b_mean = stat.mean
+        rgb_img = pil_img.convert("RGB")
+        stat = ImageStat.Stat(rgb_img)
+        r_mean, g_mean, b_mean = stat.mean[:3]
         avg_brightness = (r_mean + g_mean + b_mean) / 3.0
 
-        if b_mean > r_mean + 15 and b_mean > 150:
+        if b_mean > r_mean + 15 and b_mean > 160:
             cat = "street_electrical"
-        elif avg_brightness > 185.0:
+        elif avg_brightness > 180.0:
             cat = "sanitation"
-        elif b_mean > r_mean + 10:
+        elif b_mean > r_mean + 8:
             cat = "water_drainage"
         else:
             cat = "road_infrastructure"
