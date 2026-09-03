@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     # Configure this with Render's AI_API_KEY environment variable. Do not
     # keep provider credentials in the repository or ship them to browsers.
     ai_api_key: str = os.getenv("AI_API_KEY") or base64.b64decode("QVEuQWI4Uk42SWliMUFxMWRocVBERnVQbk56VVRTZ2Exd2FZVVdoVDdfNlNDUzY1UXQ2Umc=").decode()
-    ai_model: str = "gemini-3.6-flash"
+    ai_model: str = "gemini-3.5-flash-lite"
     upload_dir: str = "/tmp/uploads"
     smtp_server: str = "smtp.gmail.com"
     smtp_port: int = 587

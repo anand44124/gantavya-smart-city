@@ -42,26 +42,25 @@ def extract_json(raw: str) -> dict:
     return json.loads(raw)
 
 def _sync_analyze_civic_gemini(pil_img: Image.Image, category_hint: str | None = None) -> dict[str, object]:
-    if pil_img.mode != "RGB":
-        pil_img = pil_img.convert("RGB")
+    img = pil_img.convert("RGB")
+    img.thumbnail((512, 512), Image.Resampling.LANCZOS)
     buf = io.BytesIO()
-    pil_img.save(buf, format="JPEG", quality=85)
+    img.save(buf, format="JPEG", quality=80)
     b64_image = base64.b64encode(buf.getvalue()).decode("utf-8")
 
     api_key = (settings.ai_api_key or "").strip()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.ai_model}:generateContent"
+    models_to_try = ["gemini-3.5-flash-lite", "gemini-3.5-flash"]
 
     prompt = (
         "You are an expert municipal infrastructure AI vision inspector for a smart city reporting platform.\n"
-        "Analyze this user-uploaded photograph.\n\n"
+        "Analyze this user-uploaded photograph in detail.\n\n"
         "RULES:\n"
         "1. CIVIC ISSUE DETECTION (ALWAYS ACCEPT -> is_civic_issue=true, decision='accept'):\n"
-        "   - 'road_infrastructure': Potholes, broken roads, damaged asphalt, cracked footpaths, waterlogged road craters.\n"
-        "     * NOTE: Real Indian streets often have scooters, auto-rickshaws, yellow trucks, and pedestrians in the background. If a road defect or waterfilled crater is visible on the ground, ALWAYS ACCEPT as 'road_infrastructure'!\n"
+        "   - 'road_infrastructure': Potholes, broken roads, damaged asphalt, cracked footpaths, waterlogged road craters (Department: 'Roads Department')\n"
         "   - 'sanitation': Garbage heaps, uncollected trash, plastic dump piles, overflowing bins (Department: 'Sanitation Department')\n"
         "   - 'water_drainage': Water pipeline leaks, flooded streets, open/blocked drains (Department: 'Water Department')\n"
-        "   - 'street_electrical': Broken streetlights, tilted utility poles, hanging power cables (Department: 'Electrical Department')\n"
-        "   - 'public_safety': Open manholes, missing sewer covers, deep sinkholes, fallen trees on roads\n\n"
+        "   - 'street_electrical': Broken streetlights, damaged lamp globes/fixtures, hanging power cables (Department: 'Electrical Department')\n"
+        "   - 'public_safety': Open manholes, missing sewer covers, deep sinkholes, fallen trees on roads (Department: 'Public Safety Department')\n\n"
         "2. STRICT REJECTION (ONLY REJECT IF COMPLETELY NON-CIVIC -> is_civic_issue=false, decision='reject'):\n"
         "   - Pure indoor selfies, personal human portraits, pets/animals, food items with zero outdoor road or garbage\n"
         "   - Memes, anime, cartoons, drawings, digital wallpapers\n\n"
@@ -97,18 +96,17 @@ def _sync_analyze_civic_gemini(pil_img: Image.Image, category_hint: str | None =
         ],
         "generationConfig": {
             "response_mime_type": "application/json",
-            "temperature": 0.0
+            "temperature": 0.0,
+            "max_output_tokens": 400
         }
     }
-
-    models_to_try = [settings.ai_model, "gemini-1.5-flash"]
 
     if api_key:
         for model_name in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
             for attempt in range(1):
                 try:
-                    resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(4, 10))
+                    resp = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=(3, 8))
                     if resp.status_code == 200:
                         candidates = resp.json().get("candidates", [])
                         if candidates:
